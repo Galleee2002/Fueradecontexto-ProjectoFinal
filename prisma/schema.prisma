@@ -1,0 +1,232 @@
+// Prisma schema for Fuera de Contexto E-commerce
+// Based on docs/DATA-MODEL.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// PRODUCTOS
+// ============================================
+
+model Product {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  name          String
+  description   String   @db.Text
+
+  price         Float
+  originalPrice Float?
+  discount      Int?     @db.SmallInt
+
+  category      String
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  soldCount     Int      @default(0)
+  stock         Int
+
+  isNew         Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  isFlashSale   Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relaciones
+  images        ProductImage[]
+  sizes         ProductSize[]
+  colors        ProductColor[]
+  tags          ProductTag[]
+  cartItems     CartItem[]
+  wishlistItems Wishlist[]
+
+  @@index([category])
+  @@index([slug])
+  @@index([isFlashSale, isFeatured])
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  url       String
+  order     Int     @default(0)
+  productId String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductSize {
+  id        String  @id @default(uuid())
+  size      String  // "XS" | "S" | "M" | "L" | "XL" | "XXL" | "Unico"
+  productId String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductColor {
+  id        String  @id @default(uuid())
+  name      String
+  hex       String
+  productId String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductTag {
+  id        String  @id @default(uuid())
+  tag       String
+  productId String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([tag])
+}
+
+// ============================================
+// CARRITO
+// ============================================
+
+model CartItem {
+  id            String   @id @default(uuid())
+
+  // Usuario (null para no logueados)
+  userId        String?
+  sessionId     String?  // Para usuarios no logueados
+
+  // Producto
+  productId     String
+  quantity      Int
+
+  // Variantes seleccionadas
+  selectedSize  String
+  selectedColor Json     // { name: string, hex: string }
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Un usuario no puede tener el mismo item duplicado
+  @@unique([userId, productId, selectedSize, selectedColor])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([productId])
+}
+
+// ============================================
+// WISHLIST
+// ============================================
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  addedAt   DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ============================================
+// USUARIOS
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String    // Hash bcrypt
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses     Address[]
+  orders        Order[]
+
+  @@index([email])
+}
+
+model Address {
+  id         String  @id @default(uuid())
+  userId     String
+  label      String
+  fullName   String
+  street     String
+  city       String
+  province   String
+  postalCode String
+  phone      String
+  isDefault  Boolean @default(false)
+
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// ÓRDENES
+// ============================================
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  userId          String
+
+  status          String      // "pending" | "confirmed" | "shipped" | "delivered"
+  paymentStatus   String      // "pending" | "paid" | "failed"
+
+  subtotal        Float
+  discount        Float       @default(0)
+  shippingCost    Float
+  tax             Float       @default(0)
+  total           Float
+
+  shippingAddress Json        // Address snapshot
+  billingAddress  Json        // Address snapshot
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+model OrderItem {
+  id              String  @id @default(uuid())
+  orderId         String
+  productId       String
+
+  // Snapshot del producto al momento de compra
+  productSnapshot Json    // { name, price, image }
+
+  quantity        Int
+  unitPrice       Float
+  subtotal        Float
+
+  selectedSize    String
+  selectedColor   Json
+
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
