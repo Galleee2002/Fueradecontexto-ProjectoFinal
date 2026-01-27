@@ -7,6 +7,7 @@ import { WishlistProvider } from "@/context/wishlist-context";
 import { TopBanner } from "@/components/layout/top-banner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ScrollToTop } from "@/components/shared/scroll-to-top";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
               <Navbar />
               <main className="min-h-screen">{children}</main>
               <Footer />
+              <ScrollToTop />
             </WishlistProvider>
           </CartProvider>
         </ThemeProvider>
