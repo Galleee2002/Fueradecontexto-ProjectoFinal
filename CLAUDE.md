@@ -20,6 +20,40 @@ npm start            # Start production server
 npm run lint         # Run ESLint on codebase
 ```
 
+## Tech Stack Decisions
+
+### Estado Global
+- **Actual (mantener):** Cart y Wishlist usan Context API
+- **Nuevos estados:** Usar **Zustand** para cualquier estado global adicional
+- NO crear nuevos Context APIs, migrar a Zustand cuando sea necesario
+
+### Formularios
+- **Stack obligatorio:** `react-hook-form` + `zod`
+- Usar en todos los formularios (filtros, búsqueda, edición, etc.)
+- Validación con schemas de Zod
+
+### API Layer
+- **Usar:** Route Handlers (`app/api/*/route.ts`)
+- **NO usar:** Server Actions
+- Todas las mutaciones y queries van por API routes explícitas
+
+### UI Patterns
+- **NO usar:** Modales para crear/editar recursos
+- **Usar:** Páginas dedicadas con URLs propias
+- Ejemplo: `/admin/productos/nuevo` en lugar de modal
+
+### Autenticación (Temporal)
+- **Estado actual:** Sin NextAuth implementado
+- **Para desarrollo:** Usar `userId` hardcodeado: `"user-test-001"`
+- Marcar con comentarios `// TODO: Replace with real auth`
+- **Futuro:** Implementar NextAuth.js
+
+### Data Layer
+- **Base de datos:** PostgreSQL (Railway) + Prisma ORM
+- **Productos:** Migrados a base de datos (23 productos)
+- **API Routes:** `/api/products` para Client Components
+- **Server Components:** Acceso directo a Prisma cuando sea posible
+
 ## Architecture
 
 ### App Router Structure (Next.js 16)

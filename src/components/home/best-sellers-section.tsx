@@ -1,10 +1,11 @@
 import { ProductCard } from "@/components/shared/product-card"
-import { products } from "@/data/products"
+import { getProducts } from "@/lib/db/products"
 
-export function BestSellersSection() {
-  const bestSellers = [...products]
-    .sort((a, b) => b.soldCount - a.soldCount)
-    .slice(0, 4)
+export async function BestSellersSection() {
+  const { products: bestSellers } = await getProducts({
+    sortBy: "best-selling",
+    limit: 4,
+  })
 
   return (
     <section>

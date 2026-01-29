@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -16,11 +16,12 @@ import { FilterSidebar } from "@/components/catalog/filter-sidebar"
 import { SortDropdown } from "@/components/catalog/sort-dropdown"
 import { ActiveFilters } from "@/components/catalog/active-filters"
 import { ProductGrid } from "@/components/catalog/product-grid"
-import { products } from "@/data/products"
-import { CategorySlug, Size, SortOption } from "@/types"
+import { fetchProducts } from "@/lib/api/products"
+import { CategorySlug, Size, SortOption, Product } from "@/types"
 import { PRODUCTS_PER_PAGE } from "@/lib/constants"
 
 export default function CatalogoPage() {
+  // Filter states
   const [selectedCategories, setSelectedCategories] = useState<CategorySlug[]>([])
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000])
   const [selectedSizes, setSelectedSizes] = useState<Size[]>([])
@@ -28,52 +29,41 @@ export default function CatalogoPage() {
   const [sortBy, setSortBy] = useState<SortOption>("relevance")
   const [page, setPage] = useState(1)
 
-  const filtered = useMemo(() => {
-    let result = [...products]
+  // Data states
+  const [products, setProducts] = useState<Product[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-    if (selectedCategories.length > 0) {
-      result = result.filter((p) => selectedCategories.includes(p.category))
+  // Load products whenever filters change
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true)
+
+        const { products: fetchedProducts, total: totalCount } = await fetchProducts({
+          categories: selectedCategories.length ? selectedCategories : undefined,
+          priceRange:
+            priceRange[0] > 0 || priceRange[1] < 100000 ? priceRange : undefined,
+          sizes: selectedSizes.length ? selectedSizes : undefined,
+          colors: selectedColors.length ? selectedColors : undefined,
+          sortBy,
+          limit: page * PRODUCTS_PER_PAGE,
+          offset: 0,
+        })
+
+        setProducts(fetchedProducts)
+        setTotal(totalCount)
+      } catch (error) {
+        console.error("Error loading products:", error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    if (priceRange[0] > 0) {
-      result = result.filter((p) => p.price >= priceRange[0])
-    }
-    if (priceRange[1] < 100000) {
-      result = result.filter((p) => p.price <= priceRange[1])
-    }
+    loadProducts()
+  }, [selectedCategories, priceRange, selectedSizes, selectedColors, sortBy, page])
 
-    if (selectedSizes.length > 0) {
-      result = result.filter((p) =>
-        p.sizes.some((s) => selectedSizes.includes(s))
-      )
-    }
-
-    if (selectedColors.length > 0) {
-      result = result.filter((p) =>
-        p.colors.some((c) => selectedColors.includes(c.name))
-      )
-    }
-
-    switch (sortBy) {
-      case "price-asc":
-        result.sort((a, b) => a.price - b.price)
-        break
-      case "price-desc":
-        result.sort((a, b) => b.price - a.price)
-        break
-      case "newest":
-        result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
-        break
-      case "best-selling":
-        result.sort((a, b) => b.soldCount - a.soldCount)
-        break
-    }
-
-    return result
-  }, [selectedCategories, priceRange, selectedSizes, selectedColors, sortBy])
-
-  const paginated = filtered.slice(0, page * PRODUCTS_PER_PAGE)
-  const hasMore = paginated.length < filtered.length
+  const hasMore = products.length < total
 
   const activeFiltersList = [
     ...selectedCategories.map((c) => ({
@@ -99,12 +89,15 @@ export default function CatalogoPage() {
         setSelectedCategories((prev) =>
           prev.filter((c) => c !== value)
         )
+        setPage(1) // Reset page when filter changes
         break
       case "size":
         setSelectedSizes((prev) => prev.filter((s) => s !== value))
+        setPage(1)
         break
       case "color":
         setSelectedColors((prev) => prev.filter((c) => c !== value))
+        setPage(1)
         break
     }
   }
@@ -114,6 +107,7 @@ export default function CatalogoPage() {
     setPriceRange([0, 100000])
     setSelectedSizes([])
     setSelectedColors([])
+    setPage(1)
   }
 
   return (
@@ -135,13 +129,25 @@ export default function CatalogoPage() {
         <aside className="hidden lg:block w-64 shrink-0">
           <FilterSidebar
             selectedCategories={selectedCategories}
-            onCategoryChange={setSelectedCategories}
+            onCategoryChange={(cats) => {
+              setSelectedCategories(cats)
+              setPage(1)
+            }}
             priceRange={priceRange}
-            onPriceRangeChange={setPriceRange}
+            onPriceRangeChange={(range) => {
+              setPriceRange(range)
+              setPage(1)
+            }}
             selectedSizes={selectedSizes}
-            onSizesChange={setSelectedSizes}
+            onSizesChange={(sizes) => {
+              setSelectedSizes(sizes)
+              setPage(1)
+            }}
             selectedColors={selectedColors}
-            onColorsChange={setSelectedColors}
+            onColorsChange={(colors) => {
+              setSelectedColors(colors)
+              setPage(1)
+            }}
             onClearFilters={clearFilters}
           />
         </aside>
@@ -149,7 +155,7 @@ export default function CatalogoPage() {
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
-              {filtered.length} productos
+              {loading ? "Cargando..." : `${total} productos`}
             </p>
             <div className="flex items-center gap-2">
               {/* Mobile filter button */}
@@ -167,32 +173,58 @@ export default function CatalogoPage() {
                   <div className="mt-4">
                     <FilterSidebar
                       selectedCategories={selectedCategories}
-                      onCategoryChange={setSelectedCategories}
+                      onCategoryChange={(cats) => {
+                        setSelectedCategories(cats)
+                        setPage(1)
+                      }}
                       priceRange={priceRange}
-                      onPriceRangeChange={setPriceRange}
+                      onPriceRangeChange={(range) => {
+                        setPriceRange(range)
+                        setPage(1)
+                      }}
                       selectedSizes={selectedSizes}
-                      onSizesChange={setSelectedSizes}
+                      onSizesChange={(sizes) => {
+                        setSelectedSizes(sizes)
+                        setPage(1)
+                      }}
                       selectedColors={selectedColors}
-                      onColorsChange={setSelectedColors}
+                      onColorsChange={(colors) => {
+                        setSelectedColors(colors)
+                        setPage(1)
+                      }}
                       onClearFilters={clearFilters}
                     />
                   </div>
                 </SheetContent>
               </Sheet>
-              <SortDropdown value={sortBy} onChange={setSortBy} />
+              <SortDropdown
+                value={sortBy}
+                onChange={(sort) => {
+                  setSortBy(sort)
+                  setPage(1)
+                }}
+              />
             </div>
           </div>
 
           <ActiveFilters filters={activeFiltersList} onRemove={removeFilter} />
 
-          <ProductGrid products={paginated} />
-
-          {hasMore && (
-            <div className="text-center mt-8">
-              <Button variant="outline" onClick={() => setPage((p) => p + 1)}>
-                Cargar mas productos
-              </Button>
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Cargando productos...
             </div>
+          ) : (
+            <>
+              <ProductGrid products={products} />
+
+              {hasMore && (
+                <div className="text-center mt-8">
+                  <Button variant="outline" onClick={() => setPage((p) => p + 1)}>
+                    Cargar mas productos
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

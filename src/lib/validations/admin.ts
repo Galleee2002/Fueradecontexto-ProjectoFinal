@@ -1,0 +1,97 @@
+import { z } from "zod"
+
+// ============================================
+// PRODUCTS
+// ============================================
+
+const productColorSchema = z.object({
+  name: z.string().min(1, "El nombre del color es requerido"),
+  hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Código hex inválido (ej: #FF0000)"),
+})
+
+export const productSchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  slug: z
+    .string()
+    .min(3, "El slug debe tener al menos 3 caracteres")
+    .regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones"),
+  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
+  price: z.number().positive("El precio debe ser mayor a 0"),
+  originalPrice: z.number().positive().optional().nullable(),
+  discount: z.number().int().min(0).max(100).optional().nullable(),
+  category: z.enum(["buzos", "gorras", "camperas", "remeras", "accesorios"], {
+    errorMap: () => ({ message: "Categoría inválida" }),
+  }),
+  stock: z.number().int().min(0, "El stock no puede ser negativo"),
+  rating: z.number().min(0).max(5).default(0),
+  reviewCount: z.number().int().min(0).default(0),
+  soldCount: z.number().int().min(0).default(0),
+  isNew: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  isFlashSale: z.boolean().default(false),
+  // Nested arrays
+  images: z
+    .array(
+      z.object({
+        url: z.string().url("URL de imagen inválida"),
+        order: z.number().int().min(0).default(0),
+      })
+    )
+    .min(1, "Al menos una imagen es requerida"),
+  sizes: z
+    .array(z.enum(["XS", "S", "M", "L", "XL", "XXL", "Unico"]))
+    .min(1, "Al menos un tamaño es requerido"),
+  colors: z.array(productColorSchema).min(1, "Al menos un color es requerido"),
+  tags: z.array(z.string()).default([]),
+})
+
+export type ProductFormData = z.infer<typeof productSchema>
+
+export const stockUpdateSchema = z.object({
+  stock: z.number().int().min(0, "El stock no puede ser negativo"),
+})
+
+export type StockUpdateData = z.infer<typeof stockUpdateSchema>
+
+// ============================================
+// ORDERS
+// ============================================
+
+export const orderStatusSchema = z.object({
+  status: z.enum(["pending", "confirmed", "shipped", "delivered"], {
+    errorMap: () => ({ message: "Estado de pedido inválido" }),
+  }),
+})
+
+export type OrderStatusData = z.infer<typeof orderStatusSchema>
+
+export const orderFiltersSchema = z.object({
+  search: z.string().optional(),
+  status: z.enum(["pending", "confirmed", "shipped", "delivered"]).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  page: z.number().int().positive().default(1),
+  limit: z.number().int().positive().max(100).default(20),
+})
+
+export type OrderFiltersData = z.infer<typeof orderFiltersSchema>
+
+// ============================================
+// USERS
+// ============================================
+
+export const userStatusSchema = z.object({
+  isActive: z.boolean(),
+})
+
+export type UserStatusData = z.infer<typeof userStatusSchema>
+
+export const userFiltersSchema = z.object({
+  search: z.string().optional(),
+  role: z.enum(["customer", "admin"]).optional(),
+  isActive: z.boolean().optional(),
+  page: z.number().int().positive().default(1),
+  limit: z.number().int().positive().max(100).default(20),
+})
+
+export type UserFiltersData = z.infer<typeof userFiltersSchema>

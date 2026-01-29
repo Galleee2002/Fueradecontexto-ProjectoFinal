@@ -1,6 +1,3 @@
-"use client"
-
-import { use } from "react"
 import { notFound } from "next/navigation"
 import {
   Breadcrumb,
@@ -14,15 +11,24 @@ import { ImageGallery } from "@/components/product/image-gallery"
 import { ProductInfo } from "@/components/product/product-info"
 import { ProductTabs } from "@/components/product/product-tabs"
 import { RelatedProducts } from "@/components/product/related-products"
-import { products } from "@/data/products"
+import { getProductBySlug, getProducts } from "@/lib/db/products"
 
-export default function ProductoPage({
+/**
+ * Generate static params for all products
+ * Enables static site generation for product pages
+ */
+export async function generateStaticParams() {
+  const { products } = await getProducts({ limit: 1000 })
+  return products.map((p) => ({ slug: p.slug }))
+}
+
+export default async function ProductoPage({
   params,
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const { slug } = use(params)
-  const product = products.find((p) => p.slug === slug)
+  const { slug } = await params
+  const product = await getProductBySlug(slug)
 
   if (!product) {
     notFound()

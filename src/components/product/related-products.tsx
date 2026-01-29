@@ -1,18 +1,16 @@
 import { ProductCard } from "@/components/shared/product-card"
-import { products } from "@/data/products"
+import { getProductsByCategory } from "@/lib/db/products"
 import { Product } from "@/types"
 
 interface RelatedProductsProps {
   currentProduct: Product
 }
 
-export function RelatedProducts({ currentProduct }: RelatedProductsProps) {
-  const related = products
-    .filter(
-      (p) =>
-        p.category === currentProduct.category && p.id !== currentProduct.id
-    )
-    .slice(0, 6)
+export async function RelatedProducts({ currentProduct }: RelatedProductsProps) {
+  const related = await getProductsByCategory(currentProduct.category, {
+    excludeId: currentProduct.id,
+    limit: 6,
+  })
 
   if (related.length === 0) return null
 

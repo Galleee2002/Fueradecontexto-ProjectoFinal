@@ -6,7 +6,7 @@
 **Tipo:** E-commerce de ropa personalizada
 **Productos:** Buzos, Gorras, Camperas, Remeras y accesorios
 **Moneda:** ARS (Pesos Argentinos)
-**Fase Actual:** Frontend UI (Sin backend)
+**Fase Actual:** Backend en Desarrollo - Admin Panel (Products Management Completado)
 
 ---
 
@@ -30,6 +30,20 @@
 ### Estado & Persistencia
 - **React Context API** (Cart & Wishlist)
 - **localStorage** (persistencia client-side)
+- **Zustand** (estado global para admin panel)
+
+### Backend & Database
+- **Prisma ORM 7.3.0** (ORM)
+- **PostgreSQL** (Railway - base de datos)
+- **NextAuth.js** (autenticación - pendiente implementar)
+
+### Formularios & Validación
+- **react-hook-form** (manejo de formularios)
+- **zod** (validación de schemas)
+- **@hookform/resolvers** (integración RHF + Zod)
+
+### Admin Panel
+- **@tanstack/react-table** (tablas interactivas)
 
 ### Utilidades
 - **clsx** + **tailwind-merge** (cn utility)
@@ -181,6 +195,109 @@
 
 ---
 
+### 8. Panel de Administración (`/admin/*`)
+
+**Estado: Parcialmente Implementado** ✅
+**Autenticación:** Temporal (hardcoded "user-test-001", pendiente NextAuth)
+
+**Layout:**
+- Sidebar con navegación (Dashboard, Productos, Pedidos, Usuarios)
+- Header con título de sección
+- Responsive design
+
+---
+
+#### Dashboard (`/admin`)
+**Estado: Completado** ✅
+
+- **Stats Cards:**
+  - Total de productos (con conteo real de DB)
+  - Total de pedidos (con conteo real de DB)
+  - Total de usuarios (con conteo real de DB)
+  - Total de ventas (suma de orders.total)
+- **Info Card:** Bienvenida y lista de funcionalidades disponibles
+
+---
+
+#### Productos (`/admin/productos`)
+**Estado: Completado** ✅
+
+**Funcionalidades:**
+- **Lista de productos** con tabla interactiva (TanStack Table)
+  - Columnas: Imagen, Nombre/Categoría, Precio, Stock, Vendidos, Estados, Acciones
+  - Botón "Nuevo Producto"
+- **Crear producto** (`/admin/productos/nuevo`)
+  - Formulario completo con react-hook-form + zod
+  - Campos: nombre, slug, descripción, precio, precio original, descuento
+  - Categoría, stock
+  - Múltiples imágenes (con orden)
+  - Múltiples talles (toggle buttons)
+  - Múltiples colores (nombre + hex picker)
+  - Tags opcionales
+  - Flags: isNew, isFeatured, isFlashSale
+  - Validación en tiempo real
+  - Manejo de errores
+- **Editar producto** (`/admin/productos/[id]/editar`)
+  - Mismo formulario precargado con datos
+  - Actualización completa de producto
+- **Eliminar producto**
+  - Botón en tabla con icono
+  - Diálogo de confirmación
+  - Eliminación de DB con cascade (relaciones)
+
+**API Endpoints Implementados:**
+- `POST /api/products` - Crear producto (Admin only)
+- `GET /api/products/[slug]?byId=true` - Obtener por ID
+- `PUT /api/products/[slug]?byId=true` - Actualizar (Admin only)
+- `DELETE /api/products/[slug]?byId=true` - Eliminar (Admin only)
+
+**Validación:**
+- Frontend: react-hook-form + zod schema
+- Backend: zod validation en API routes
+- Mensajes en español
+
+**Componentes:**
+- `AdminSidebar` - Navegación lateral
+- `DataTable` - Tabla genérica reutilizable
+- `ConfirmationDialog` - Diálogo de confirmación
+- `ProductForm` - Formulario completo de producto
+- `products-columns.tsx` - Definición de columnas
+
+**Database Layer:**
+- `src/lib/db/products.ts` - Funciones CRUD:
+  - `createProduct(data)` - Crear con relaciones
+  - `updateProduct(id, data)` - Actualizar con relaciones
+  - `deleteProduct(id)` - Eliminar (cascade)
+  - `getProductById(id)` - Obtener por ID
+  - `updateProductStock(id, stock)` - Actualizar stock
+
+---
+
+#### Pedidos (`/admin/pedidos`)
+**Estado: Placeholder** ⏳
+
+- Pantalla "Próximamente"
+- Pendiente implementar:
+  - Lista de pedidos con tabla
+  - Detalle de pedido
+  - Actualización de estado
+  - Filtros (status, fecha, búsqueda)
+
+---
+
+#### Usuarios (`/admin/usuarios`)
+**Estado: Placeholder** ⏳
+
+- Pantalla "Próximamente"
+- Pendiente implementar:
+  - Lista de usuarios con tabla
+  - Detalle de usuario
+  - Activar/desactivar usuarios
+  - Cambiar roles
+  - Filtros (role, status, búsqueda)
+
+---
+
 ## Estado Global
 
 ### CartContext
@@ -216,10 +333,70 @@
 
 ---
 
-## Datos Mock
+### Admin Stores (Zustand)
 
-### Productos (25 total)
-**Distribución por categoría:**
+**Ubicación:** `src/store/admin-store.ts`
+
+#### useProductFilters
+```typescript
+{
+  filters: {
+    search: string
+    category: string
+    status: "all" | "inStock" | "outOfStock" | "featured"
+  }
+  setSearch: (search: string) => void
+  setCategory: (category: string) => void
+  setStatus: (status: ...) => void
+  resetFilters: () => void
+}
+```
+
+#### useOrderFilters
+```typescript
+{
+  filters: {
+    search: string
+    status: "all" | "pending" | "confirmed" | "shipped" | "delivered"
+    dateRange: { from: Date | null, to: Date | null }
+  }
+  setSearch: (search: string) => void
+  setStatus: (status: ...) => void
+  setDateRange: (from, to) => void
+  resetFilters: () => void
+}
+```
+
+#### useUserFilters
+```typescript
+{
+  filters: {
+    search: string
+    role: "all" | "customer" | "admin"
+    status: "all" | "active" | "inactive"
+  }
+  setSearch: (search: string) => void
+  setRole: (role: ...) => void
+  setStatus: (status: ...) => void
+  resetFilters: () => void
+}
+```
+
+**Sin persistencia** - Estado en memoria durante la sesión
+
+---
+
+## Datos del Sistema
+
+### Productos (Base de Datos - PostgreSQL)
+**Estado: Producción** ✅
+
+**Fuente de datos:**
+- Base de datos PostgreSQL en Railway
+- 23 productos seedeados inicialmente
+- CRUD completo implementado en admin panel
+
+**Distribución por categoría (inicial):**
 - Buzos: 5 productos
 - Remeras: 6 productos
 - Camperas: 4 productos
@@ -234,6 +411,17 @@
 - Flags: isNew, isFeatured, isFlashSale
 - Múltiples talles y colores
 - 2-3 imágenes placeholder por producto
+
+**Acceso:**
+- Frontend: Server Components usan `getProducts()`, `getProductBySlug()`
+- Client Components: API route `GET /api/products`
+- Admin: CRUD completo via admin panel
+
+**Modelos Relacionados:**
+- `ProductImage` - Múltiples imágenes con orden
+- `ProductSize` - Talles disponibles
+- `ProductColor` - Colores con nombre y hex
+- `ProductTag` - Tags opcionales
 
 ### Categorías (5)
 ```typescript
@@ -399,41 +587,144 @@ export const PRODUCTS_PER_PAGE = 12
 
 ---
 
-## Próximos Pasos (Backend)
+## Estado de Implementación Backend
 
-### Fase 2: Base de Datos
-**Tecnologías Planeadas:**
-- Prisma ORM
-- PostgreSQL
-- Schema diseñado:
-  ```prisma
-  model Product { ... }
-  model User { ... }
-  model Order { ... }
-  model CartItem { ... }
-  ```
+### ✅ Fase 2: Base de Datos (COMPLETADO)
+**Tecnologías:**
+- Prisma ORM 7.3.0 ✅
+- PostgreSQL (Railway) ✅
+- Schema diseñado y creado ✅
+- Migraciones completadas ✅
+- Seed ejecutado ✅ (23 productos creados)
 
-### Fase 3: Autenticación
-- NextAuth.js
-- Providers: Google, Credentials
-- Session management
-- Protected routes
+**Estado:**
+- ✅ Schema creado con 10 modelos principales
+- ✅ Migraciones ejecutadas en Railway
+- ✅ Base de datos poblada con productos
+- ✅ Campos admin agregados a User (role, isActive, lastLoginAt)
+- ✅ Database layer implementada (`src/lib/db/products.ts`)
+- ✅ API routes para productos (GET, POST, PUT, DELETE)
 
-### Fase 4: API Routes
-- `/api/products` (CRUD)
-- `/api/cart` (sync con DB)
-- `/api/orders` (create, list, get)
-- `/api/checkout` (integración pagos)
+**Modelos implementados:**
+```prisma
+Product, ProductImage, ProductSize, ProductColor, ProductTag
+CartItem, Wishlist
+User, Address
+Order, OrderItem
+```
 
-### Fase 5: Pagos Reales
-- MercadoPago integration
-- Webhook handling
-- Order confirmation emails
+---
 
-### Fase 6: Admin Panel
-- Product management
-- Order management
-- Analytics dashboard
+### ✅ Fase 2.5: Admin Panel (EN PROGRESO)
+
+#### Phase 1: Foundation ✅
+- ✅ Dependencias instaladas (react-hook-form, zod, zustand, @tanstack/react-table)
+- ✅ Layout admin con sidebar
+- ✅ Dashboard con estadísticas reales
+- ✅ Sistema de auth temporal
+- ✅ Validaciones con Zod
+- ✅ Stores Zustand para filtros
+
+#### Phase 2: Products Management ✅
+- ✅ CRUD completo de productos
+- ✅ Formulario avanzado con react-hook-form
+- ✅ Tabla interactiva con TanStack Table
+- ✅ API Routes (POST, PUT, DELETE)
+- ✅ Database layer functions
+- ✅ Validación frontend y backend
+
+#### Phase 3: Orders Management ⏳
+- ⏳ Lista de pedidos con tabla
+- ⏳ Detalle de pedido
+- ⏳ Actualización de estados
+- ⏳ Filtros y búsqueda
+- ⏳ API Routes para orders
+- ⏳ Database layer para orders
+
+#### Phase 4: Users Management ⏳
+- ⏳ Lista de usuarios con tabla
+- ⏳ Detalle de usuario
+- ⏳ Activar/desactivar usuarios
+- ⏳ Cambiar roles
+- ⏳ API Routes para users
+- ⏳ Database layer para users
+
+**Documentación detallada:** `docs/ADMIN-DASHBOARD.md`
+
+---
+
+### Fase 3: Autenticación (PENDIENTE)
+**Prioridad: Alta**
+
+**Tareas:**
+- ⏳ Instalar NextAuth.js + @auth/prisma-adapter
+- ⏳ Configurar `app/api/auth/[...nextauth]/route.ts`
+- ⏳ Providers: Google, Credentials
+- ⏳ Session management
+- ⏳ Protected routes (`/mi-cuenta/*`, `/admin/*`)
+- ⏳ Verificación de role="admin" en rutas admin
+- ⏳ **CRÍTICO:** Reemplazar auth temporal en todos los API routes
+
+**Archivos con TODOs de auth temporal:**
+- `src/lib/auth.ts`
+- `src/app/api/products/route.ts`
+- `src/app/api/products/[slug]/route.ts`
+- Futuros API routes de orders y users
+
+---
+
+### Fase 4: API Routes (EN PROGRESO)
+
+**Implementado:**
+- ✅ `GET /api/products` - Lista con filtros
+- ✅ `POST /api/products` - Crear (Admin)
+- ✅ `GET /api/products/[slug]` - Por slug
+- ✅ `GET /api/products/[slug]?byId=true` - Por ID
+- ✅ `PUT /api/products/[slug]?byId=true` - Actualizar (Admin)
+- ✅ `DELETE /api/products/[slug]?byId=true` - Eliminar (Admin)
+
+**Pendiente:**
+- ⏳ `/api/cart` - CRUD de carrito (sync con DB)
+- ⏳ `/api/wishlist` - CRUD de wishlist (sync con DB)
+- ⏳ `/api/orders` - Crear, listar, obtener
+- ⏳ `/api/orders/[id]/status` - Actualizar estado
+- ⏳ `/api/users` - Listar, obtener, actualizar
+- ⏳ `/api/checkout` - Flujo de checkout completo
+
+---
+
+### Fase 5: Sistema de Órdenes (PENDIENTE)
+**Prioridad: Media-Alta**
+
+**Tareas:**
+- ⏳ Conectar checkout con API real
+- ⏳ Crear orden desde carrito
+- ⏳ Generar número único (FDC-2026-XXXXX)
+- ⏳ Guardar snapshot de productos
+- ⏳ Calcular totales (subtotal, envío, impuestos)
+- ⏳ Limpiar carrito post-orden
+- ⏳ Emails de confirmación (Resend)
+- ⏳ Actualizar `/mi-cuenta/pedidos` con órdenes reales
+
+---
+
+### Fase 6: Pagos Reales (PENDIENTE)
+**Prioridad: Media**
+
+**Tareas:**
+- ⏳ Configurar Mercado Pago
+- ⏳ Webhook handling
+- ⏳ Order confirmation emails
+- ⏳ Manejo de estados de pago
+
+---
+
+### Fase 7: Features Adicionales (FUTURO)
+- ⏳ Sistema de reviews
+- ⏳ Personalización de productos
+- ⏳ Analytics dashboard avanzado
+- ⏳ Exportación de datos
+- ⏳ Notificaciones push
 
 ---
 
@@ -458,23 +749,35 @@ npx tsc --noEmit
 
 ---
 
-## Variables de Entorno (Futuras)
+## Variables de Entorno
 
+### Actuales (Configuradas)
 ```env
-# Base de datos
-DATABASE_URL="postgresql://..."
+# Base de datos (Railway PostgreSQL)
+DATABASE_URL="postgresql://..." ✅
+```
 
+### Pendientes de Configurar
+```env
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="..."
+NEXTAUTH_SECRET="..." # Generar con: openssl rand -base64 32
+
+# Google OAuth (opcional)
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
 
 # MercadoPago
 MERCADOPAGO_ACCESS_TOKEN="..."
 MERCADOPAGO_PUBLIC_KEY="..."
 
-# Email
+# Email (Resend)
 RESEND_API_KEY="..."
 EMAIL_FROM="noreply@fueradecontexto.com"
+
+# Site
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
 
 ---
 
@@ -512,6 +815,152 @@ EMAIL_FROM="noreply@fueradecontexto.com"
 - Sitemap.xml
 - Robots.txt
 - Canonical URLs
+
+---
+
+## Estructura del Proyecto
+
+### Directorios Clave
+
+```
+src/
+├── app/
+│   ├── (auth)/                 # Grupo de rutas de autenticación
+│   ├── admin/                  # Panel de administración ✅
+│   │   ├── layout.tsx          # Layout con sidebar
+│   │   ├── page.tsx            # Dashboard con stats
+│   │   ├── productos/          # Gestión de productos ✅
+│   │   │   ├── page.tsx        # Lista de productos
+│   │   │   ├── nuevo/          # Crear producto
+│   │   │   └── [id]/editar/    # Editar producto
+│   │   ├── pedidos/            # Gestión de pedidos ⏳
+│   │   └── usuarios/           # Gestión de usuarios ⏳
+│   ├── api/
+│   │   ├── products/           # API de productos ✅
+│   │   │   ├── route.ts        # GET (lista), POST (crear)
+│   │   │   └── [slug]/route.ts # GET, PUT, DELETE
+│   │   ├── orders/             # API de pedidos ⏳
+│   │   └── users/              # API de usuarios ⏳
+│   ├── catalogo/               # Página de catálogo
+│   ├── carrito/                # Carrito de compras
+│   ├── checkout/               # Flujo de checkout
+│   ├── mi-cuenta/              # Páginas de cuenta de usuario
+│   └── producto/[slug]/        # Página de detalle de producto
+├── components/
+│   ├── admin/                  # Componentes admin ✅
+│   │   ├── admin-sidebar.tsx
+│   │   ├── confirmation-dialog.tsx
+│   │   ├── data-table.tsx
+│   │   ├── product-form.tsx
+│   │   └── columns/            # Definiciones de columnas
+│   ├── account/                # Componentes de cuenta
+│   ├── cart/                   # Componentes de carrito
+│   ├── catalog/                # Componentes de catálogo
+│   ├── checkout/               # Componentes de checkout
+│   ├── home/                   # Componentes de home
+│   ├── layout/                 # Layout (nav, footer)
+│   ├── product/                # Componentes de producto
+│   ├── shared/                 # Componentes compartidos
+│   └── ui/                     # ShadCN UI components
+├── context/
+│   ├── cart-context.tsx        # Context de carrito
+│   └── wishlist-context.tsx    # Context de wishlist
+├── lib/
+│   ├── auth.ts                 # Utilidades de auth ✅
+│   ├── prisma.ts               # Cliente de Prisma
+│   ├── utils.ts                # Utilidades generales
+│   ├── db/                     # Database layer ✅
+│   │   ├── products.ts         # Queries de productos
+│   │   ├── orders.ts           # Queries de pedidos ⏳
+│   │   └── users.ts            # Queries de usuarios ⏳
+│   └── validations/
+│       └── admin.ts            # Schemas Zod admin ✅
+├── store/
+│   └── admin-store.ts          # Zustand stores ✅
+├── data/                       # Datos mock (legado)
+└── types/
+    └── index.ts                # Type definitions
+```
+
+---
+
+## Convenciones de Desarrollo
+
+### Patrón de Rutas Admin
+- **Listados:** Server Component → fetch directo de Prisma
+- **Formularios:** Client Component → POST/PUT a API route
+- **Eliminaciones:** Client Component → DELETE a API route
+- **NO usar modales** para crear/editar (usar páginas dedicadas)
+
+### Validación
+- **Frontend:** react-hook-form + zod resolver
+- **Backend:** zod parse en API routes
+- **Mensajes:** Siempre en español
+
+### Autenticación (Temporal)
+```typescript
+// TODO: Replace with real auth
+const userId = getCurrentUserId() // Returns "user-test-001"
+requireAdmin(userId) // Throws if not admin
+```
+Todos los archivos con auth temporal están marcados con `// TODO`
+
+### Manejo de Errores en API Routes
+```typescript
+try {
+  // ... código
+} catch (error: any) {
+  // Validation errors (ZodError)
+  if (error.name === "ZodError") {
+    return NextResponse.json(
+      { error: "Validation failed", details: error.errors },
+      { status: 400 }
+    )
+  }
+
+  // Auth errors
+  if (error.message?.includes("Unauthorized")) {
+    return NextResponse.json({ error: error.message }, { status: 403 })
+  }
+
+  // Generic errors
+  return NextResponse.json(
+    { error: "Failed to ..." },
+    { status: 500 }
+  )
+}
+```
+
+### Database Layer Pattern
+```typescript
+// Siempre usar el include estándar
+export const productInclude = { ... }
+
+// Transformar Prisma types a frontend types
+export function transformProduct(p: PrismaProduct): Product { ... }
+
+// Queries con filtros y paginación
+export async function getProducts(filters: Filters): Promise<{ products, total }> { ... }
+
+// Mutations con validación
+export async function createProduct(data: CreateData): Promise<Product> { ... }
+```
+
+### Estado Global
+- **Cart/Wishlist:** Context API (mantener)
+- **Admin filters:** Zustand stores (nuevo patrón)
+- **Nuevos estados globales:** Usar Zustand
+
+---
+
+## Archivos de Documentación
+
+- 📄 `docs/PLAN.md` - Este archivo (plan general del proyecto)
+- 📄 `docs/DATA-MODEL.md` - Modelo de datos detallado
+- 📄 `docs/NEXT-STEPS.md` - Próximos pasos y tareas pendientes
+- 📄 `docs/ADMIN-DASHBOARD.md` - Documentación detallada del admin panel ✅
+- 📄 `CLAUDE.md` - Instrucciones para Claude Code
+- 📄 `README.md` - Información general del proyecto
 
 ---
 

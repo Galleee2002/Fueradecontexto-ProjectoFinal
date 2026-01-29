@@ -5,11 +5,46 @@ import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/shared/product-card"
 import { useWishlist } from "@/hooks/use-wishlist"
-import { products } from "@/data/products"
+import { fetchProductsByIds } from "@/lib/api/products"
+import { useState, useEffect } from "react"
+import type { Product } from "@/types"
 
 export default function WishlistPage() {
   const { items } = useWishlist()
-  const wishlistProducts = products.filter((p) => items.includes(p.id))
+  const [wishlistProducts, setWishlistProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (items.length === 0) {
+        setWishlistProducts([])
+        setLoading(false)
+        return
+      }
+
+      try {
+        const products = await fetchProductsByIds(items)
+        setWishlistProducts(products)
+      } catch (error) {
+        console.error("Error loading wishlist products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProducts()
+  }, [items])
+
+  if (loading) {
+    return (
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Lista de Deseos</h2>
+        <div className="text-center py-12 text-muted-foreground">
+          Cargando...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>

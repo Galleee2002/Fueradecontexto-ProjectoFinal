@@ -24,7 +24,7 @@ Este documento describe el modelo de datos completo del e-commerce **Fuera de Co
 - Frontend: Next.js 16 + React 19 + TypeScript
 - Estado: React Context API
 - Persistencia: Datos estáticos (TS files) + localStorage
-- Futura migración: PostgreSQL + Prisma
+- Base de datos: PostgreSQL (Railway) + Prisma ORM
 
 ---
 
@@ -670,7 +670,7 @@ export const products: Product[] = [
 
 ### Migración Futura: Base de Datos
 
-Para producción se recomienda migrar a **PostgreSQL + Prisma ORM**.
+Para producción se recomienda migrar a **PostgreSQL (Railway) + Prisma ORM**.
 
 Ver sección [Migración a Base de Datos](#migración-a-base-de-datos) para detalles.
 
@@ -977,27 +977,64 @@ model OrderItem {
 }
 ```
 
+### Configuración de Base de Datos con Railway
+
+**Railway** es una plataforma cloud que simplifica el despliegue de bases de datos PostgreSQL sin necesidad de Docker local.
+
+#### Estado Actual: ✅ CONFIGURADO Y FUNCIONANDO
+
+#### Pasos que ya se completaron:
+
+1. **✅ Cuenta en Railway creada**
+   - Proyecto configurado
+   - PostgreSQL provisionado
+
+2. **✅ Base de datos PostgreSQL creada**
+   - Instancia activa en Railway
+   - URL de conexión configurada
+
+3. **✅ Variables de entorno configuradas**
+   ```bash
+   # Archivo .env en la raíz del proyecto
+   DATABASE_URL="postgresql://postgres:PASSWORD@mainline.proxy.rlwy.net:23766/railway"
+   ```
+
+4. **✅ Prisma configurado con adapter de PostgreSQL**
+   - Se usa `@prisma/adapter-pg` con `pg` driver
+   - Configuración en `src/lib/prisma.ts`
+
+#### Configuración de Prisma 7
+
+**Cambios importantes en Prisma 7:**
+- El `url` ya NO va en `schema.prisma`
+- La URL se configura en `prisma.config.ts`
+- El cliente usa adapter directamente
+- Preview feature "driverAdapters" ya no es necesaria
+
 ### Comandos de Migración
 
+**Estado:** ✅ Migraciones completadas y base de datos poblada
+
 ```bash
-# 1. Instalar dependencias
-npm install prisma @prisma/client
+# Comandos ya ejecutados:
+# ✅ npm install prisma @prisma/client @prisma/adapter-pg pg dotenv
+# ✅ npx prisma migrate dev --name init
+# ✅ npx prisma generate
+# ✅ npm run db:seed (23 productos creados)
 
-# 2. Inicializar Prisma
-npx prisma init
-
-# 3. Configurar DATABASE_URL en .env
-DATABASE_URL="postgresql://user:password@localhost:5432/fueradecontexto"
-
-# 4. Crear migración inicial
-npx prisma migrate dev --name init
-
-# 5. Seed de datos
-npx prisma db seed
-
-# 6. Generar cliente
-npx prisma generate
+# Comandos disponibles para uso futuro:
+npm run db:migrate    # Crear nueva migración
+npm run db:seed       # Re-ejecutar seed (limpia datos existentes)
+npm run db:studio     # Abrir Prisma Studio (explorar BD visualmente)
+npm run db:reset      # Resetear BD completa (¡cuidado!)
+npx prisma generate   # Regenerar cliente Prisma tras cambios en schema
 ```
+
+**Archivos de configuración de Prisma:**
+- `prisma/schema.prisma` - Schema de la base de datos
+- `prisma.config.ts` - Configuración de Prisma (incluye DATABASE_URL)
+- `src/lib/prisma.ts` - Cliente de Prisma con adapter de PostgreSQL
+- `prisma/seed.ts` - Script para poblar la BD con datos iniciales
 
 ### Script de Seed
 
@@ -1072,18 +1109,20 @@ main()
 
 | Entidad | Tipo | Implementación | Persistencia | API | Estado |
 |---------|------|----------------|--------------|-----|--------|
-| **Product** | ✅ | ✅ Completo | Estático (.ts) | ❌ | Funcional |
+| **Product** | ✅ | ✅ Completo | ✅ PostgreSQL (23 items) | ⏳ | Funcional (datos estáticos) |
+| **ProductImage** | ✅ | ✅ Completo | ✅ PostgreSQL | ⏳ | Funcional |
+| **ProductSize** | ✅ | ✅ Completo | ✅ PostgreSQL | ⏳ | Funcional |
+| **ProductColor** | ✅ | ✅ Completo | ✅ PostgreSQL | ⏳ | Funcional |
+| **ProductTag** | ✅ | ✅ Completo | ✅ PostgreSQL | ⏳ | Funcional |
 | **Category** | ✅ | ✅ Completo | Estático (.ts) | ❌ | Funcional |
-| **ProductColor** | ✅ | ✅ Embebido | Estático | ❌ | Funcional |
-| **Size** | ✅ | ✅ Type union | Estático | ❌ | Funcional |
-| **CartItem** | ✅ | ✅ Completo | localStorage | ❌ | Funcional |
-| **WishlistItem** | ✅ | ✅ Simplificado | localStorage | ❌ | Funcional |
+| **CartItem** | ✅ | ✅ Completo | ✅ PostgreSQL + localStorage | ⏳ | Funcional (localStorage) |
+| **Wishlist** | ✅ | ✅ Completo | ✅ PostgreSQL + localStorage | ⏳ | Funcional (localStorage) |
 | **FilterState** | ✅ | ✅ Local state | Memoria | ❌ | Funcional |
 | **Banner** | ✅ | ✅ Completo | Estático (.ts) | ❌ | Funcional |
-| **Address** | ✅ | ❌ Pendiente | - | ❌ | No implementado |
-| **OrderSummary** | ✅ | ❌ Pendiente | - | ❌ | No implementado |
-| **User** | ❌ | ❌ Pendiente | - | ❌ | No implementado |
-| **Order** | ❌ | ❌ Pendiente | - | ❌ | No implementado |
+| **Address** | ✅ | ❌ Pendiente | ✅ PostgreSQL (schema) | ❌ | No implementado |
+| **User** | ✅ | ❌ Pendiente | ✅ PostgreSQL (schema) | ❌ | No implementado |
+| **Order** | ✅ | ❌ Pendiente | ✅ PostgreSQL (schema) | ❌ | No implementado |
+| **OrderItem** | ✅ | ❌ Pendiente | ✅ PostgreSQL (schema) | ❌ | No implementado |
 | **Payment** | ❌ | ❌ Pendiente | - | ❌ | No implementado |
 | **Review** | ❌ | ❌ Pendiente | - | ❌ | No implementado |
 

@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/shared/product-card"
-import { products } from "@/data/products"
+import { fetchProducts } from "@/lib/api/products"
+import type { Product } from "@/types"
 
 const tabs = [
   { id: "best-selling", label: "Mas Vendidos" },
@@ -15,27 +16,46 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"]
 
-function filterProducts(tabId: TabId) {
-  switch (tabId) {
-    case "best-selling":
-      return [...products].sort((a, b) => b.soldCount - a.soldCount).slice(0, 10)
-    case "new":
-      return products.filter((p) => p.isNew).slice(0, 10)
-    case "discount":
-      return products
-        .filter((p) => p.originalPrice)
-        .sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0))
-        .slice(0, 10)
-    case "featured":
-      return products.filter((p) => p.isFeatured).slice(0, 10)
-    default:
-      return products.slice(0, 10)
-  }
-}
-
 export function TodaysPicksSection() {
   const [activeTab, setActiveTab] = useState<TabId>("best-selling")
-  const filtered = filterProducts(activeTab)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true)
+        let data
+
+        switch (activeTab) {
+          case "best-selling":
+            data = await fetchProducts({ sortBy: "best-selling", limit: 10 })
+            break
+          case "new":
+            data = await fetchProducts({ isNew: true, limit: 10 })
+            break
+          case "discount":
+            // Fetch best-selling and filter by originalPrice
+            data = await fetchProducts({ sortBy: "best-selling", limit: 20 })
+            data.products = data.products.filter((p) => p.originalPrice).slice(0, 10)
+            break
+          case "featured":
+            data = await fetchProducts({ isFeatured: true, limit: 10 })
+            break
+          default:
+            data = await fetchProducts({ limit: 10 })
+        }
+
+        setProducts(data.products)
+      } catch (error) {
+        console.error("Error loading today's picks:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProducts()
+  }, [activeTab])
 
   return (
     <section>
@@ -55,11 +75,19 @@ export function TodaysPicksSection() {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filtered.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="text-muted-foreground">Cargando productos...</div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+
       <div className="text-center mt-8">
         <Button variant="outline" asChild>
           <Link href="/catalogo">Ver Todo</Link>
