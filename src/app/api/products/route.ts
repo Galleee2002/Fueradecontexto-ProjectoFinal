@@ -3,7 +3,7 @@ import { getProducts, createProduct } from "@/lib/db/products"
 import type { ProductFilters } from "@/lib/db/products"
 import type { CategorySlug, Size, SortOption } from "@/types"
 import { productSchema } from "@/lib/validations/admin"
-import { requireAdmin, getCurrentUserId } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth/auth-utils"
 
 /**
  * GET /api/products
@@ -106,9 +106,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check admin authorization
-    // TODO: Replace with real auth
-    const userId = getCurrentUserId()
-    requireAdmin(userId)
+    await requireAdmin()
 
     const body = await request.json()
 
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     // Handle auth errors
     if (error.message?.includes("Unauthorized")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
+      return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
     return NextResponse.json(

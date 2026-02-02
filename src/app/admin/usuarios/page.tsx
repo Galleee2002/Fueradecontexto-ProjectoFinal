@@ -1,31 +1,43 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users } from "lucide-react"
+import { getUsers } from "@/lib/db/users"
+import { DataTable } from "@/components/admin/data-table"
+import { usersColumns } from "@/components/admin/columns/users-columns"
+import { UserFilters } from "@/components/admin/user-filters"
 
-export default function UsersPage() {
+export default async function UsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await searchParams
+
+  // Parse search params to filters
+  const filters = {
+    search: (params.search as string) || "",
+    role: params.role as any,
+    isActive:
+      params.isActive === "true"
+        ? true
+        : params.isActive === "false"
+        ? false
+        : undefined,
+    page: Number(params.page) || 1,
+    limit: 20,
+  }
+
+  const { users, total } = await getUsers(filters)
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Usuarios</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Usuarios</h2>
         <p className="text-sm text-muted-foreground">
-          Gestiona los usuarios de la tienda
+          Gestiona los usuarios de la tienda ({total} total)
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Próximamente
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            La gestión de usuarios estará disponible próximamente. Aquí podrás
-            ver y gestionar todos los usuarios registrados, sus roles y
-            permisos.
-          </p>
-        </CardContent>
-      </Card>
+      <UserFilters />
+
+      <DataTable columns={usersColumns} data={users} />
     </div>
   )
 }

@@ -1,12 +1,15 @@
 ## ✅ Completado Recientemente
 
-### ✅ Panel de Administración (Phase 1 y 2)
+### ✅ Panel de Administración (Phases 1, 2, 3 y 4)
 
 **Estado: COMPLETADO** ✅
+**Última actualización:** 2026-02-02
 
-Se implementó el Admin Dashboard completo con gestión de productos:
+Se implementó el Admin Dashboard completo con gestión de productos, pedidos y usuarios:
 
 **Funcionalidades implementadas:**
+
+**Phase 1 & 2 - Foundation & Products:**
 - ✅ Layout admin con sidebar navegación
 - ✅ Dashboard principal con estadísticas reales (productos, pedidos, usuarios, ventas)
 - ✅ CRUD completo de productos:
@@ -21,115 +24,182 @@ Se implementó el Admin Dashboard completo con gestión de productos:
 - ✅ API Routes para productos (POST, PUT, DELETE)
 - ✅ Database layer con Prisma (funciones CRUD)
 
+**Phase 3 - Orders Management:**
+- ✅ Database layer (`src/lib/db/orders.ts`):
+  - `getOrders()` con filtros (search, status, date range, pagination)
+  - `getOrderById()` con items completos
+  - `updateOrderStatus()` para actualizar estados
+  - `getOrderStats()` para dashboard
+- ✅ API Routes:
+  - `GET /api/orders` - Lista con filtros y stats
+  - `GET /api/orders/[id]` - Orden individual
+  - `PATCH /api/orders/[id]` - Actualizar estado (admin protected)
+- ✅ UI Components:
+  - Tabla de órdenes con columnas personalizadas
+  - Filtros con sync URL/Zustand
+  - Inline status dropdown para updates rápidos
+  - Página de detalle con items, addresses, totals
+  - StatusBadge component reutilizable
+- ✅ Tipos TypeScript para Order y OrderItem
+
+**Phase 4 - Users Management:**
+- ✅ Database layer (`src/lib/db/users.ts`):
+  - `getUsers()` con filtros (search, role, isActive, pagination)
+  - `getUserById()` con addresses y orders
+  - `updateUserStatus()` para activar/desactivar
+  - `updateUserRole()` para cambiar roles
+  - `getUserStats()` para dashboard
+  - **SECURITY:** Password field NEVER exposed
+- ✅ API Routes:
+  - `GET /api/users` - Lista con filtros y stats (admin protected)
+  - `GET /api/users/[id]` - Usuario individual (admin protected)
+  - `PATCH /api/users/[id]` - Update status/role (admin protected)
+- ✅ UI Components:
+  - Tabla de usuarios con columnas personalizadas
+  - Filtros con sync URL/Zustand
+  - Inline status toggle switch
+  - Role change con confirmation dialog
+  - Página de detalle con avatar, addresses, recent orders
+  - Cross-linking entre usuarios y órdenes
+- ✅ Tipos TypeScript para User
+
 **URLs disponibles:**
 - `/admin` - Dashboard
-- `/admin/productos` - Gestión de productos
-- `/admin/pedidos` - Placeholder
-- `/admin/usuarios` - Placeholder
+- `/admin/productos` - Gestión de productos (CRUD completo)
+- `/admin/pedidos` - Gestión de pedidos (lista, detalle, status updates)
+- `/admin/usuarios` - Gestión de usuarios (lista, detalle, status/role updates)
+
+**Dependencias instaladas:**
+- `date-fns` - Formato de fechas en español
+- `shadcn/ui switch` - Toggle component
 
 **Documentación:** Ver `docs/ADMIN-DASHBOARD.md` para detalles completos
 
 ---
 
-## 🎯 Próximas Tareas Prioritarias
+### ✅ NextAuth.js Implementación (Phases 1-3)
 
-### 1. Completar Admin Panel - Orders Management
+**Estado: PARCIALMENTE COMPLETADO** ⏳
+**Última actualización:** 2026-02-02
 
-**Prioridad: Alta**
+Se implementó NextAuth.js con autenticación básica funcional:
 
-Implementar Phase 3 del Admin Dashboard para gestión de pedidos:
+**Fases completadas:**
 
-**Tareas:**
-1. Crear `src/lib/db/orders.ts` con query functions:
-   - `getOrders(filters)` - Lista con paginación y filtros
-   - `getOrderById(id)` - Detalle de pedido individual
-   - `updateOrderStatus(id, status)` - Actualizar estado
-   - `getOrderStats()` - Estadísticas para dashboard
+**Phase 1 - Foundation:**
+- ✅ NextAuth.js v5 (beta) instalado con dependencias (bcryptjs, resend, @auth/prisma-adapter)
+- ✅ Prisma schema extendido con modelos NextAuth (Account, Session, VerificationToken)
+- ✅ Migración de base de datos ejecutada exitosamente
+- ✅ Variables de entorno configuradas (.env y .env.example)
+- ✅ NEXTAUTH_SECRET generado (openssl rand -base64 32)
 
-2. Crear API routes:
-   - `GET /api/orders` - Lista con filtros (status, dateRange, search)
-   - `GET /api/orders/[id]` - Pedido individual
-   - `PATCH /api/orders/[id]/status` - Actualizar estado
-   - `GET /api/orders/stats` - Estadísticas
+**Phase 2 - Core Authentication:**
+- ✅ Password utilities creadas (`src/lib/auth/password-utils.ts`):
+  - Hashing con bcrypt (12 salt rounds)
+  - Verificación de contraseñas
+  - Validación de fortaleza (8+ chars, mayúsculas, minúsculas, números)
+- ✅ NextAuth configuración (`src/lib/auth/auth-config.ts`):
+  - Credentials Provider para email/password
+  - JWT strategy con 7 días de expiración
+  - Callbacks para incluir role, isActive, emailVerified en session
+- ✅ Auth utilities (`src/lib/auth/auth-utils.ts`):
+  - `requireAdmin()` - Protección de rutas admin
+  - `requireAuth()` - Protección de rutas autenticadas
+  - `getCurrentSession()` - Obtener sesión actual
+  - `getCurrentUserId()` - Obtener ID del usuario
+- ✅ Validation schemas (`src/lib/validations/auth.ts`):
+  - signInSchema, signUpSchema
+  - passwordResetRequestSchema, passwordResetSchema
+- ✅ API Routes:
+  - `POST /api/auth/signup` - Registro de usuarios
+  - `/api/auth/[...nextauth]` - NextAuth handler
+- ✅ TypeScript types extendidos (`src/types/next-auth.d.ts`)
 
-3. Crear componentes:
-   - `src/components/admin/columns/orders-columns.tsx` - Columnas tabla
-   - `src/components/admin/order-filters.tsx` - Filtros de búsqueda
-   - `src/components/admin/status-badge.tsx` - Badge estados
+**Phase 3 - Route Protection:**
+- ✅ Middleware creado (`src/middleware.ts`):
+  - Protege `/admin/*` (solo admin role)
+  - Protege `/mi-cuenta/*` (usuarios autenticados)
+  - Protege `/checkout/*` (usuarios autenticados)
+  - Redirects con callbackUrl preservado
+- ✅ API Routes actualizadas (6 archivos):
+  - `src/app/api/products/route.ts` (POST)
+  - `src/app/api/products/[slug]/route.ts` (PUT, DELETE)
+  - `src/app/api/orders/route.ts` (GET)
+  - `src/app/api/orders/[id]/route.ts` (PATCH)
+  - `src/app/api/users/route.ts` (GET)
+  - `src/app/api/users/[id]/route.ts` (GET, PATCH)
+- ✅ Archivo temporal eliminado (`src/lib/auth.ts` deleted)
+- ✅ Layouts actualizados:
+  - SessionProvider agregado a root layout
+  - Admin layout con session check y email display
 
-4. Crear páginas:
-   - `src/app/admin/pedidos/page.tsx` - Lista de pedidos
-   - `src/app/admin/pedidos/[id]/page.tsx` - Detalle del pedido
+**Archivos creados:**
+- 📄 `src/lib/auth/password-utils.ts` - Utilidades de contraseñas
+- 📄 `src/lib/auth/auth-config.ts` - Configuración NextAuth
+- 📄 `src/lib/auth/auth-utils.ts` - Funciones helper de auth
+- 📄 `src/lib/validations/auth.ts` - Schemas Zod para auth
+- 📄 `src/types/next-auth.d.ts` - Type definitions
+- 📄 `src/app/api/auth/[...nextauth]/route.ts` - NextAuth handler
+- 📄 `src/app/api/auth/signup/route.ts` - Registro API
+- 📄 `src/middleware.ts` - Route protection middleware
 
-5. Agregar validaciones en `src/lib/validations/admin.ts`
+**Database changes:**
+- Account, Session, VerificationToken models agregados
+- User model actualizado con relaciones NextAuth
 
-**Estados de pedido:** pending, confirmed, shipped, delivered
+**Fases pendientes:**
 
----
+**Phase 4 - Authentication UI (Pendiente):**
+- ⏳ Crear página de login (`/auth/login`)
+- ⏳ Crear página de registro (`/auth/register`)
+- ⏳ Actualizar navbar con user menu y logout
+- ⏳ Crear página de error de auth (`/auth/error`)
 
-### 2. Completar Admin Panel - Users Management
+**Phase 5 - Email Service (Pendiente):**
+- ⏳ Configurar Resend API key (necesario para emails)
+- ⏳ Crear email service (`src/lib/email/email-service.ts`)
+- ⏳ Implementar password reset flow:
+  - `POST /api/auth/forgot-password`
+  - `POST /api/auth/reset-password`
+  - `/auth/forgot-password` página
+  - `/auth/reset-password` página
+- ⏳ Implementar email verification:
+  - `POST /api/auth/verify-email`
+  - `/auth/verify-email` página
+  - Enviar emails en signup
 
-**Prioridad: Alta**
+**Phase 6 - Testing & Polish (Pendiente):**
+- ⏳ Crear primer usuario admin (seed script o manual)
+- ⏳ Testing manual de todos los flujos
+- ⏳ Actualizar documentación final
 
-Implementar Phase 4 del Admin Dashboard para gestión de usuarios:
-
-**Tareas:**
-1. Crear `src/lib/db/users.ts` con query functions:
-   - `getUsers(filters)` - Lista con paginación
-   - `getUserById(id)` - Usuario individual
-   - `updateUserStatus(id, isActive)` - Activar/desactivar
-   - `updateUserRole(id, role)` - Cambiar rol
-   - `getUserStats()` - Estadísticas
-
-2. Crear API routes:
-   - `GET /api/users` - Lista con filtros (role, status, search)
-   - `GET /api/users/[id]` - Usuario individual
-   - `PATCH /api/users/[id]/status` - Activar/desactivar
-   - `PATCH /api/users/[id]/role` - Cambiar rol
-   - `GET /api/users/stats` - Estadísticas
-
-3. Crear componentes:
-   - `src/components/admin/columns/users-columns.tsx` - Columnas tabla
-   - `src/components/admin/user-filters.tsx` - Filtros de búsqueda
-
-4. Crear páginas:
-   - `src/app/admin/usuarios/page.tsx` - Lista de usuarios
-   - `src/app/admin/usuarios/[id]/page.tsx` - Detalle del usuario
-
-5. Agregar validaciones en `src/lib/validations/admin.ts`
-
----
-
-### 3. Implementar Autenticación con NextAuth
-
-**Prioridad: Alta** (Requerido para reemplazar auth temporal)
-
-Configurar NextAuth.js para autenticación de usuarios:
-
-**Pasos:**
-1. Instalar NextAuth:
-```bash
-npm install next-auth @auth/prisma-adapter
-```
-
-2. Crear `app/api/auth/[...nextauth]/route.ts`
-3. Configurar providers (Google, Credentials)
-4. Conectar con Prisma Adapter
-5. Proteger rutas de cuenta (`/mi-cuenta/*`)
-6. Proteger rutas admin (`/admin/*`) - verificar role="admin"
-7. **IMPORTANTE:** Reemplazar todos los TODOs de auth temporal:
-   - `src/lib/auth.ts` - Reemplazar funciones hardcoded
-   - `src/app/api/products/route.ts`
-   - `src/app/api/products/[slug]/route.ts`
-   - Todos los futuros API routes admin
+**Próximos pasos inmediatos:**
+1. Obtener Resend API key de https://resend.com
+2. Implementar Phase 4 (Authentication UI) - 3-4 horas
+3. Implementar Phase 5 (Email Service) - 3-4 horas
+4. Testing completo
 
 **Recursos:**
 - [NextAuth Docs](https://next-auth.js.org/)
 - [Prisma Adapter](https://next-auth.js.org/adapters/prisma)
+- [Resend API](https://resend.com)
 
 ---
 
-### 4. Migrar Carrito y Wishlist a Base de Datos
+## 🎯 Próximas Tareas Prioritarias
+
+### 1. Completar NextAuth - Phases 4-6
+
+**Prioridad: Alta** (Implementación 60% completa)
+
+Terminar las fases pendientes de NextAuth:
+- Phase 4: Authentication UI (login, register, navbar)
+- Phase 5: Email service (password reset, verification)
+- Phase 6: Testing y primer usuario admin
+
+---
+
+### 2. Migrar Carrito y Wishlist a Base de Datos
 
 **Prioridad: Media**
 
@@ -152,7 +222,7 @@ Actualmente están en localStorage. Migrar a la base de datos para usuarios logu
 
 ---
 
-### 5. Sistema de Órdenes Completo
+### 3. Sistema de Órdenes Completo
 
 **Prioridad: Media-Alta**
 
@@ -172,7 +242,7 @@ Crear flujo completo de órdenes funcional:
 
 ## 🎯 Tareas Futuras (Fase 3)
 
-### 6. Integración de Pagos
+### 4. Integración de Pagos
 
 **Prioridad: Media**
 
@@ -184,7 +254,7 @@ Crear flujo completo de órdenes funcional:
 
 ---
 
-### 7. Sistema de Reviews
+### 5. Sistema de Reviews
 
 **Prioridad: Baja**
 
@@ -196,7 +266,7 @@ Crear flujo completo de órdenes funcional:
 
 ---
 
-### 8. Personalización de Productos
+### 6. Personalización de Productos
 
 **Prioridad: Baja**
 
@@ -283,7 +353,7 @@ npm run build
 - Usa `productSchema.partial()` para actualizaciones que no requieren todos los campos
 - Recuerda que los items del carrito se identifican por `productId-size-colorName`
 - Al actualizar relaciones (images, colors, sizes), elimina las viejas primero
-- Marca con `// TODO: Replace with real auth` cualquier código de auth temporal
+- Todas las API routes admin requieren `await requireAdmin()` para protección
 
 ### Performance
 - Server Components por defecto, Client Components solo cuando necesites interactividad
@@ -310,48 +380,65 @@ npm run build
 - `zustand` - Estado global
 - `@hookform/resolvers` - Integración RHF + Zod
 - `@tanstack/react-table` - Tablas avanzadas
+- `date-fns` - Manejo y formato de fechas (español)
 
 ### UI (shadcn/ui components)
 - table, form, label, textarea
 - alert, alert-dialog
-- select, checkbox
-- card, button, badge, input
+- select, checkbox, switch
+- card, button, badge, input, avatar
 - (y otros componentes base ya existentes)
+
+### NextAuth Dependencies (instaladas)
+- ✅ `next-auth@beta` - NextAuth.js v5
+- ✅ `@auth/prisma-adapter` - Adapter NextAuth
+- ✅ `bcryptjs` - Password hashing
+- ✅ `@types/bcryptjs` - TypeScript types
+- ✅ `resend` - Email service
 
 ### Pendiente de instalar (según necesidad)
 - `sonner` - Toast notifications
 - `recharts` - Gráficos para dashboard
-- `next-auth` - Autenticación
-- `@auth/prisma-adapter` - Adapter NextAuth
-- `resend` - Envío de emails
-- `date-fns` - Manejo de fechas
 
 ---
 
 ## 📊 Estado del Proyecto
 
-**Última actualización:** 2026-01-29
+**Última actualización:** 2026-02-02
 
-**Fase actual:** Fase 2.5 - Admin Dashboard (Products Management Completado)
+**Fase actual:** Fase 3 - NextAuth Implementación (60% completo) ⏳
 
 **Progreso general:**
 - ✅ Fase 1: Frontend UI completo
 - ✅ Fase 2: Base de datos configurada y poblada
 - ✅ Fase 2.5: Admin Panel - Foundation (Phase 1)
 - ✅ Fase 2.5: Admin Panel - Products Management (Phase 2)
-- ⏳ Fase 2.5: Admin Panel - Orders Management (Phase 3) - Pendiente
-- ⏳ Fase 2.5: Admin Panel - Users Management (Phase 4) - Pendiente
-- ⏳ Fase 3: Autenticación real con NextAuth - Pendiente
-- ⏳ Fase 4: API Routes completas - En progreso
+- ✅ Fase 2.5: Admin Panel - Orders Management (Phase 3)
+- ✅ Fase 2.5: Admin Panel - Users Management (Phase 4)
+- ⏳ Fase 3: Autenticación real con NextAuth - 60% completado
+  - ✅ Phase 1: Foundation (DB models, env vars, dependencies)
+  - ✅ Phase 2: Core Authentication (password utils, NextAuth config, API routes)
+  - ✅ Phase 3: Route Protection (middleware, API protection, layouts)
+  - ⏳ Phase 4: Authentication UI (login, register, navbar) - Pendiente
+  - ⏳ Phase 5: Email Service (password reset, verification) - Pendiente
+  - ⏳ Phase 6: Testing & Polish - Pendiente
+- ✅ Fase 4: API Routes completas - Completado (con NextAuth protection)
 - ⏳ Fase 5: Integración de pagos - Pendiente
 
 **Archivos clave creados:**
-- 📁 `src/app/admin/` - Rutas admin completas
-- 📁 `src/components/admin/` - Componentes admin
-- 📄 `src/lib/auth.ts` - Auth temporal
-- 📄 `src/lib/validations/admin.ts` - Schemas Zod
-- 📄 `src/store/admin-store.ts` - Zustand stores
+- 📁 `src/app/admin/` - Rutas admin completas (Dashboard, Products, Orders, Users)
+- 📁 `src/components/admin/` - Componentes admin reutilizables
+- 📁 `src/lib/db/` - Database layer (products, orders, users)
+- 📁 `src/lib/auth/` - **NUEVO:** NextAuth utilities
+  - 📄 `auth-config.ts` - Configuración NextAuth (providers, callbacks, JWT)
+  - 📄 `auth-utils.ts` - Helper functions (requireAdmin, requireAuth, getCurrentSession)
+  - 📄 `password-utils.ts` - Password hashing y validación
+- 📄 `src/middleware.ts` - **NUEVO:** Route protection middleware
+- 📄 `src/lib/validations/admin.ts` - Schemas Zod completos
+- 📄 `src/lib/validations/auth.ts` - **NUEVO:** Schemas Zod para auth
+- 📄 `src/store/admin-store.ts` - Zustand stores (product, order, user filters)
 - 📄 `docs/ADMIN-DASHBOARD.md` - Documentación detallada
+- 📄 `CLAUDE.md` - Guía de arquitectura actualizada
 
 ---
 
@@ -359,18 +446,21 @@ npm run build
 
 ### Corto Plazo (1-2 semanas)
 1. ✅ Products Management - COMPLETADO
-2. Orders Management (Phase 3)
-3. Users Management (Phase 4)
-4. NextAuth implementación básica
+2. ✅ Orders Management (Phase 3) - COMPLETADO
+3. ✅ Users Management (Phase 4) - COMPLETADO
+4. ⏳ NextAuth implementación - 60% COMPLETADO
+   - ✅ Foundation, Core Auth, Route Protection
+   - ⏳ Auth UI, Email Service, Testing pendientes
+5. ⏳ Cart/Wishlist sincronización con DB
 
 ### Mediano Plazo (3-4 semanas)
-5. Cart/Wishlist sincronización con DB
-6. Sistema de órdenes completo
+6. Sistema de órdenes completo (checkout funcional)
 7. Emails transaccionales
-8. Polish del admin panel
+8. Polish del admin panel (paginación, toast notifications)
+9. Integración Mercado Pago
 
 ### Largo Plazo (1-2 meses)
-9. Integración Mercado Pago
 10. Sistema de reviews
 11. Personalización de productos
 12. Testing E2E completo
+13. SEO optimization

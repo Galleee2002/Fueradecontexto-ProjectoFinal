@@ -42,11 +42,15 @@ npm run lint         # Run ESLint on codebase
 - **Usar:** Páginas dedicadas con URLs propias
 - Ejemplo: `/admin/productos/nuevo` en lugar de modal
 
-### Autenticación (Temporal)
-- **Estado actual:** Sin NextAuth implementado
-- **Para desarrollo:** Usar `userId` hardcodeado: `"user-test-001"`
-- Marcar con comentarios `// TODO: Replace with real auth`
-- **Futuro:** Implementar NextAuth.js
+### Autenticación
+- **Sistema:** NextAuth.js v5 (beta) con Credentials Provider
+- **Session Strategy:** JWT (7 días de expiración)
+- **Providers:** Email/Password (OAuth puede agregarse después)
+- **Route Protection:** Middleware en `src/middleware.ts`
+- **API Protection:** `requireAdmin()` y `requireAuth()` desde `src/lib/auth/auth-utils.ts`
+- **Password Security:** Bcrypt con 12 salt rounds
+- **Email Service:** Resend (para verificación y reset de contraseña)
+- **Estado:** Parcialmente implementado (Phases 1-3 completadas)
 
 ### Data Layer
 - **Base de datos:** PostgreSQL (Railway) + Prisma ORM
@@ -166,3 +170,41 @@ npx shadcn@latest add [component-name]
 
 **Cart/Wishlist Modifications**:
 When modifying cart logic, ensure the unique key pattern (`productId-size-colorName`) is maintained across all operations to prevent duplicate entries or incorrect updates.
+
+## Admin Panel
+
+### Structure
+- **Location:** `/admin/*`
+- **Routes:**
+  - `/admin` - Dashboard with statistics
+  - `/admin/productos` - Products management (full CRUD)
+  - `/admin/pedidos` - Orders management (read + status updates)
+  - `/admin/usuarios` - Users management (read + status/role updates)
+- **Auth:** NextAuth.js con middleware protection y session checks
+- **Patterns:** Server Components for data fetching, Client Components for interactions
+
+### Architecture Patterns
+- **Server Components:** Use for list pages that fetch data from database
+- **Client Components:** Use for forms, filters, and interactive elements
+- **Database Layer:** Functions in `src/lib/db/` for all queries
+- **API Routes:** All mutations go through `/api/*` endpoints
+- **Validation:** Zod schemas in `src/lib/validations/admin.ts` used in both frontend and backend
+- **State:** Zustand stores in `src/store/admin-store.ts` for filters (synced with URL)
+
+### Key Files
+- `src/lib/db/products.ts` - Product queries (CRUD operations)
+- `src/lib/db/orders.ts` - Order queries (list, detail, status updates)
+- `src/lib/db/users.ts` - User queries (list, detail, status/role updates, **NEVER returns password**)
+- `src/lib/validations/admin.ts` - Zod validation schemas
+- `src/store/admin-store.ts` - Zustand stores for filters
+- `src/lib/auth/auth-utils.ts` - NextAuth helper functions (requireAdmin, requireAuth, getCurrentSession)
+- `src/lib/auth/auth-config.ts` - NextAuth configuration (providers, callbacks, JWT)
+- `src/lib/auth/password-utils.ts` - Password hashing and validation utilities
+
+### Security Notes
+- **Users API:** NEVER expose password field (excluded in `transformUser` function)
+- **Admin Routes:** Protected with NextAuth middleware (`src/middleware.ts`) and `requireAdmin()` checks
+- **API Routes:** All admin mutations require `await requireAdmin()` call
+- **Password Security:** Bcrypt hashing with 12 salt rounds, strength validation enforced
+- **Session:** JWT strategy with 7-day expiration, includes role and status in token
+- **Validation:** Always validate in both frontend (react-hook-form + Zod) and backend (API routes + Zod)

@@ -4,7 +4,13 @@
       "Bash(docker-compose up:*)",
       "Bash(npm install:*)",
       "Bash(docker compose:*)",
-      "Bash(npx prisma init)"
+      "Bash(npx prisma init)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(openssl rand:*)"
     ]
   }
 }

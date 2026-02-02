@@ -98,3 +98,62 @@ export interface Address {
   phone: string
   isDefault: boolean
 }
+
+// ============================================
+// ORDERS (Admin)
+// ============================================
+
+export interface Order {
+  id: string
+  orderNumber: string
+  userId: string
+  userName: string          // Computed: user.firstName + lastName
+  userEmail: string         // Denormalized for search
+  status: "pending" | "confirmed" | "shipped" | "delivered"
+  paymentStatus: "pending" | "paid" | "failed"
+  subtotal: number
+  discount: number
+  shippingCost: number
+  tax: number
+  total: number
+  shippingAddress: Address  // Parsed from JSON
+  billingAddress: Address   // Parsed from JSON
+  createdAt: Date
+  updatedAt: Date
+  items?: OrderItem[]       // Optional, loaded in detail view
+}
+
+export interface OrderItem {
+  id: string
+  orderId: string
+  productId: string
+  productSnapshot: { name: string; price: number; image: string }
+  quantity: number
+  unitPrice: number
+  subtotal: number
+  selectedSize: string
+  selectedColor: { name: string; hex: string }
+}
+
+// ============================================
+// USERS (Admin)
+// ============================================
+
+export interface User {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  fullName: string          // Computed: firstName + lastName
+  phone: string | null
+  avatar: string | null
+  emailVerified: boolean
+  role: "customer" | "admin"
+  isActive: boolean
+  lastLoginAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+  ordersCount?: number      // Computed: _count.orders
+  addresses?: Address[]     // Optional, loaded in detail view
+  orders?: Order[]          // Optional, loaded in detail view
+}

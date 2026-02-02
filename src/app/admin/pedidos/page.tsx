@@ -1,31 +1,39 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShoppingCart } from "lucide-react"
+import { getOrders } from "@/lib/db/orders"
+import { DataTable } from "@/components/admin/data-table"
+import { ordersColumns } from "@/components/admin/columns/orders-columns"
+import { OrderFilters } from "@/components/admin/order-filters"
 
-export default function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await searchParams
+
+  // Parse search params to filters
+  const filters = {
+    search: (params.search as string) || "",
+    status: params.status as any,
+    startDate: params.startDate as string,
+    endDate: params.endDate as string,
+    page: Number(params.page) || 1,
+    limit: 20,
+  }
+
+  const { orders, total } = await getOrders(filters)
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Pedidos</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Pedidos</h2>
         <p className="text-sm text-muted-foreground">
-          Gestiona los pedidos de la tienda
+          Gestiona los pedidos de la tienda ({total} total)
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Próximamente
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            La gestión de pedidos estará disponible próximamente. Aquí podrás
-            ver y gestionar todos los pedidos de la tienda, actualizar estados
-            de envío y más.
-          </p>
-        </CardContent>
-      </Card>
+      <OrderFilters />
+
+      <DataTable columns={ordersColumns} data={orders} />
     </div>
   )
 }

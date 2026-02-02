@@ -6,7 +6,7 @@ import {
   deleteProduct,
 } from "@/lib/db/products"
 import { productSchema } from "@/lib/validations/admin"
-import { requireAdmin, getCurrentUserId } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth/auth-utils"
 
 /**
  * GET /api/products/[slug]
@@ -58,9 +58,7 @@ export async function PUT(
 ) {
   try {
     // Check admin authorization
-    // TODO: Replace with real auth
-    const userId = getCurrentUserId()
-    requireAdmin(userId)
+    await requireAdmin()
 
     const { slug: id } = await params
     const body = await request.json()
@@ -85,7 +83,7 @@ export async function PUT(
 
     // Handle auth errors
     if (error.message?.includes("Unauthorized")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
+      return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
     return NextResponse.json(
@@ -105,9 +103,7 @@ export async function DELETE(
 ) {
   try {
     // Check admin authorization
-    // TODO: Replace with real auth
-    const userId = getCurrentUserId()
-    requireAdmin(userId)
+    await requireAdmin()
 
     const { slug: id } = await params
 
@@ -119,7 +115,7 @@ export async function DELETE(
 
     // Handle auth errors
     if (error.message?.includes("Unauthorized")) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
+      return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
     return NextResponse.json(
