@@ -1,54 +1,28 @@
 "use client"
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
-import Autoplay from "embla-carousel-autoplay"
-import { banners } from "@/data/banners"
-
 export function HeroBanner() {
   return (
-    <Carousel
-      opts={{ loop: true }}
-      plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]}
-      className="w-full"
-    >
-      <CarouselContent>
-        {banners.map((banner) => (
-          <CarouselItem key={banner.id}>
-            <div
-              className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] flex items-center"
-              style={{
-                background: `linear-gradient(135deg, ${banner.backgroundColor} 0%, ${banner.backgroundColor}cc 50%, transparent 100%)`,
-              }}
-            >
-              <div className="max-w-7xl mx-auto px-4 w-full">
-                <div className="max-w-lg">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 leading-tight">
-                    {banner.title}
-                  </h1>
-                  <p className="text-lg sm:text-xl text-muted-foreground mb-6">
-                    {banner.subtitle}
-                  </p>
-                  <Button asChild size="lg">
-                    <Link href={banner.ctaLink}>{banner.ctaText}</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-        <CarouselPrevious className="static translate-y-0 h-8 w-8" />
-        <CarouselNext className="static translate-y-0 h-8 w-8" />
+    <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center text-center">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0">
+        {/* Placeholder for background image */}
+        <div className="absolute inset-0 bg-gray-300 opacity-20" /> {/* You can replace bg-gray-300 with an actual image via CSS background-image */}
+        <div className="absolute inset-0 bg-background/60" />
       </div>
-    </Carousel>
+
+      {/* Content */}
+      <div className="relative z-10 max-w-4xl px-4">
+        <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tighter">
+          NO SEGUIMOS <span className="text-accent">TENDENCIAS</span>
+          <br />
+          CREAMOS PRENDAS QUE
+          <br />
+          CUENTAN TU <span className="text-accent">HISTORIA</span>
+        </h1>
+        <p className="mt-6 text-lg md:text-xl text-muted-foreground">
+          El detalle <span className="text-accent">hace la diferencia</span>
+        </p>
+      </div>
+    </section>
   )
 }
