@@ -1,11 +1,14 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import { verifyPassword } from "./password-utils"
+import { authConfigEdge } from "./auth-config-edge"
 
+/**
+ * Full auth configuration with Prisma adapter
+ * This is used by API routes and server-side functions
+ * DO NOT import this in middleware - use authConfigEdge instead
+ */
 export const authConfig = {
-  adapter: PrismaAdapter(prisma) as any,
+  ...authConfigEdge,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -14,6 +17,10 @@ export const authConfig = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // Dynamic import to avoid loading Prisma in Edge Runtime
+        const { prisma } = await import("@/lib/prisma")
+        const { verifyPassword } = await import("./password-utils")
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email y contraseña requeridos")
         }
@@ -59,15 +66,8 @@ export const authConfig = {
       }
     })
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-  },
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/error",
-  },
   callbacks: {
+    ...authConfigEdge.callbacks,
     async jwt({ token, user, trigger }) {
       // On sign in, add custom fields to JWT
       if (user) {
@@ -79,6 +79,7 @@ export const authConfig = {
 
       // On token update, re-fetch user data to check for role/status changes
       if (trigger === "update") {
+        const { prisma } = await import("@/lib/prisma")
         const dbUser = await prisma.user.findUnique({
           where: { id: token.userId as string },
           select: { role: true, isActive: true, emailVerified: true }
@@ -92,15 +93,5 @@ export const authConfig = {
 
       return token
     },
-    async session({ session, token }) {
-      // Expose custom fields to client session
-      if (session.user) {
-        (session.user as any).id = token.userId as string
-        (session.user as any).role = token.role as string
-        (session.user as any).isActive = token.isActive as boolean
-        (session.user as any).emailVerified = token.emailVerified as boolean
-      }
-      return session
-    }
   }
 } satisfies NextAuthConfig

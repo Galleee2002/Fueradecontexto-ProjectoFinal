@@ -1,5 +1,8 @@
-import { auth } from "@/auth"
+import NextAuth from "next-auth"
+import { authConfigEdge } from "@/lib/auth/auth-config-edge"
 import { NextResponse } from "next/server"
+
+const { auth } = NextAuth(authConfigEdge)
 
 export default auth((req) => {
   const token = req.auth
