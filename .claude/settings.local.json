@@ -14,7 +14,8 @@
       "WebSearch",
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)"
     ]
   }
 }

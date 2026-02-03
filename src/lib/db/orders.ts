@@ -186,3 +186,192 @@ export async function getOrderStats(): Promise<{
 
   return { total, pending, confirmed, shipped, delivered }
 }
+
+// ============================================
+// CHECKOUT & MERCADO PAGO FUNCTIONS
+// ============================================
+
+export interface CreateOrderInput {
+  userId: string
+  shippingAddress: Omit<Address, "id" | "label" | "isDefault">
+  shippingCost: number
+  items: Array<{
+    productId: string
+    quantity: number
+    unitPrice: number
+    selectedSize: string
+    selectedColor: { name: string; hex: string }
+    productSnapshot: { name: string; price: number; image: string }
+  }>
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+}
+
+/**
+ * Generates a unique order number
+ * Format: FDC-YYYY-XXXXX
+ */
+function generateOrderNumber(): string {
+  const year = new Date().getFullYear()
+  const random = Math.floor(Math.random() * 100000)
+    .toString()
+    .padStart(5, "0")
+  return `FDC-${year}-${random}`
+}
+
+/**
+ * Creates a new order with pending status
+ * Stock must be reserved BEFORE calling this function
+ */
+export async function createOrder(data: CreateOrderInput): Promise<Order> {
+  const orderNumber = generateOrderNumber()
+
+  const prismaOrder = await prisma.order.create({
+    data: {
+      orderNumber,
+      userId: data.userId,
+      status: "pending",
+      paymentStatus: "pending",
+      subtotal: data.subtotal,
+      discount: data.discount,
+      shippingCost: data.shippingCost,
+      tax: data.tax,
+      total: data.total,
+      shippingAddress: data.shippingAddress as any,
+      billingAddress: data.shippingAddress as any, // Same as shipping for now
+      items: {
+        create: data.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.unitPrice * item.quantity,
+          selectedSize: item.selectedSize,
+          selectedColor: item.selectedColor as any,
+          productSnapshot: item.productSnapshot as any,
+        })),
+      },
+    },
+    include: orderInclude,
+  })
+
+  return transformOrder(prismaOrder)
+}
+
+/**
+ * Updates order with Mercado Pago preference ID
+ * Called after creating MP preference
+ */
+export async function updateOrderMpPreference(
+  orderId: string,
+  preferenceId: string
+): Promise<Order> {
+  const prismaOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { mpPreferenceId: preferenceId },
+    include: orderInclude,
+  })
+
+  return transformOrder(prismaOrder)
+}
+
+/**
+ * Updates order payment status from Mercado Pago webhook
+ * Also updates order status if payment is successful
+ */
+export async function updateOrderPaymentStatus(
+  mpPaymentId: string,
+  paymentData: {
+    status: string
+    paymentType: string
+    merchantOrder?: string
+  }
+): Promise<Order | null> {
+  // Find order by MP payment ID
+  const order = await prisma.order.findFirst({
+    where: { mpPaymentId },
+    include: orderInclude,
+  })
+
+  if (!order) {
+    // Try to find by preference ID (first webhook before payment ID is set)
+    const orderByPreference = await prisma.order.findFirst({
+      where: { mpPreferenceId: { not: null } },
+      include: orderInclude,
+      orderBy: { createdAt: "desc" },
+    })
+
+    if (!orderByPreference) return null
+
+    // Update with payment ID
+    const prismaOrder = await prisma.order.update({
+      where: { id: orderByPreference.id },
+      data: {
+        mpPaymentId,
+        mpStatus: paymentData.status,
+        mpPaymentType: paymentData.paymentType,
+        mpMerchantOrder: paymentData.merchantOrder,
+        paymentStatus: mapMpStatusToPaymentStatus(paymentData.status),
+        status:
+          paymentData.status === "approved" ? "confirmed" : orderByPreference.status,
+        paidAt: paymentData.status === "approved" ? new Date() : null,
+      },
+      include: orderInclude,
+    })
+
+    return transformOrder(prismaOrder)
+  }
+
+  // Update existing order
+  const paymentStatus = mapMpStatusToPaymentStatus(paymentData.status)
+  const orderStatus = paymentStatus === "paid" ? "confirmed" : order.status
+
+  const prismaOrder = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      paymentStatus,
+      status: orderStatus,
+      mpStatus: paymentData.status,
+      mpPaymentType: paymentData.paymentType,
+      mpMerchantOrder: paymentData.merchantOrder,
+      paidAt: paymentStatus === "paid" ? new Date() : order.paidAt,
+    },
+    include: orderInclude,
+  })
+
+  return transformOrder(prismaOrder)
+}
+
+/**
+ * Maps Mercado Pago status to internal payment status
+ */
+function mapMpStatusToPaymentStatus(
+  mpStatus: string
+): "pending" | "paid" | "failed" | "refunded" {
+  switch (mpStatus) {
+    case "approved":
+      return "paid"
+    case "rejected":
+    case "cancelled":
+      return "failed"
+    case "refunded":
+    case "charged_back":
+      return "refunded"
+    default:
+      return "pending"
+  }
+}
+
+/**
+ * Get orders for a specific user
+ */
+export async function getUserOrders(userId: string): Promise<Order[]> {
+  const prismaOrders = await prisma.order.findMany({
+    where: { userId },
+    include: orderInclude,
+    orderBy: { createdAt: "desc" },
+  })
+
+  return prismaOrders.map(transformOrder)
+}

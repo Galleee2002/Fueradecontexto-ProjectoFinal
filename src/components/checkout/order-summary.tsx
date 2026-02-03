@@ -6,9 +6,13 @@ import { formatPrice } from "@/lib/formatters"
 import { useCart } from "@/hooks/use-cart"
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/constants"
 
-export function OrderSummary() {
+interface OrderSummaryProps {
+  shippingCost?: number
+}
+
+export function OrderSummary({ shippingCost }: OrderSummaryProps) {
   const { items, subtotal } = useCart()
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 2500
+  const shipping = shippingCost ?? (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 2500)
   const total = subtotal + shipping
 
   return (

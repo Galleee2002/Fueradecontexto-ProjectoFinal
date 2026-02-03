@@ -288,6 +288,97 @@ z.enum(["value1", "value2"], {
 })
 ```
 
+## Mercado Pago Integration
+
+### Overview
+Complete checkout implementation using **Mercado Pago Checkout Pro** (redirect flow). Customers are redirected to Mercado Pago's hosted checkout page to complete payment securely.
+
+### Architecture
+
+**Checkout Flow:**
+1. User fills shipping form (validated with react-hook-form + Zod)
+2. User selects shipping method (Standard/Express)
+3. User confirms order
+4. Backend creates order and reserves stock
+5. Backend creates MP preference
+6. User is redirected to Mercado Pago
+7. User completes payment
+8. MP sends webhook notification
+9. Backend updates order status
+10. User sees success page + receives email
+
+**Stock Management:**
+- Stock is reserved when order is created (atomic transaction)
+- Stock is restored if payment fails or is cancelled
+- Stock check before order creation prevents overselling
+
+### Key Files
+
+**Backend:**
+- `src/lib/mercadopago/client.ts` - MP SDK client (lazy initialization)
+- `src/lib/mercadopago/preference.ts` - Creates payment preferences
+- `src/lib/mercadopago/payment.ts` - Fetches payment info from MP API
+- `src/lib/mercadopago/webhooks.ts` - Webhook validation
+- `src/lib/db/stock.ts` - Stock management (reserve/restore/check)
+- `src/app/api/checkout/create-order/route.ts` - Order creation endpoint
+- `src/app/api/mercadopago/webhook/route.ts` - Webhook handler
+
+**Frontend:**
+- `src/components/checkout/shipping-form.tsx` - Validated shipping form
+- `src/app/checkout/page.tsx` - Checkout flow orchestration
+- `src/app/checkout/success/[orderId]/page.tsx` - Success page
+- `src/app/checkout/failure/page.tsx` - Failure page
+
+**Validation:**
+- `src/lib/validations/checkout.ts` - Zod schemas for checkout
+
+**Email:**
+- `src/lib/email/order-confirmation.ts` - Order confirmation email template
+
+### Environment Variables
+
+Required for checkout to work:
+
+```env
+MERCADO_PAGO_ACCESS_TOKEN="APP_USR-xxxxx"
+MERCADO_PAGO_PUBLIC_KEY="APP_USR-xxxxx"
+```
+
+### Webhook Configuration
+
+1. Go to: https://www.mercadopago.com.ar/developers/panel/webhooks
+2. Create webhook with URL: `https://your-domain.com/api/mercadopago/webhook`
+3. Select events: `payment.created`, `payment.updated`
+4. For local development, use ngrok: `ngrok http 3000`
+
+### Database Schema
+
+Order model includes MP fields:
+- `mpPreferenceId` - Mercado Pago preference ID
+- `mpPaymentId` - Payment ID from MP
+- `mpStatus` - Payment status from MP
+- `mpPaymentType` - Payment method used
+- `mpMerchantOrder` - Merchant order ID
+- `paidAt` - Timestamp when payment was confirmed
+
+### Payment Status Mapping
+
+| MP Status | Internal Status |
+|-----------|----------------|
+| approved | paid |
+| rejected | failed |
+| cancelled | failed |
+| pending | pending |
+| refunded | refunded |
+
+### Security Notes
+
+- Stock operations use Prisma transactions (atomic)
+- Payment verification via MP API (not just webhook)
+- Webhook always returns 200 to prevent retries
+- Order validation checks user ownership
+- All prices calculated server-side (never trust client)
+
 ## Current Project Status
 
 **Last Updated:** 2026-02-03
@@ -298,10 +389,21 @@ z.enum(["value1", "value2"], {
 - ✅ Admin Panel (100%)
 - ✅ Authentication (100%)
   - ✅ Phase 1-6: Core auth, route protection, UI, email service, integration, and testing.
-- ⏳ Checkout Flow (50% - UI complete, API pending)
-- ❌ Payment Integration (0%)
+- ✅ Checkout Flow (100%)
+  - ✅ Shipping form with react-hook-form + Zod validation
+  - ✅ Shipping method selection (Standard/Express)
+  - ✅ Order summary with dynamic shipping costs
+  - ✅ Success and failure pages
+- ✅ Payment Integration (100%)
+  - ✅ Mercado Pago Checkout Pro integration
+  - ✅ Stock management (reserve/restore)
+  - ✅ Webhook handler for payment notifications
+  - ✅ Order confirmation emails
+  - ✅ Complete order lifecycle
 
 **Next Steps:**
-1. Implement checkout API (`POST /api/orders`)
-2. Migrate Cart/Wishlist to database for authenticated users
-3. Create first admin user (via seed script or manually)
+1. Configure Mercado Pago credentials in production
+2. Set up webhook URL in Mercado Pago dashboard
+3. Test complete checkout flow with sandbox credentials
+4. Migrate Cart/Wishlist to database for authenticated users (optional enhancement)
+5. Create first admin user (via seed script or manually)
