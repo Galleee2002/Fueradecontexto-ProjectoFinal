@@ -1,10 +1,10 @@
-import { NextAuthOptions } from "next-auth"
+import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { verifyPassword } from "./password-utils"
 
-export const authOptions: NextAuthOptions = {
+export const authConfig = {
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     CredentialsProvider({
@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email as string },
           select: {
             id: true,
             email: true,
@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const isValidPassword = await verifyPassword(
-          credentials.password,
+          credentials.password as string,
           user.password
         )
 
@@ -95,12 +95,12 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // Expose custom fields to client session
       if (session.user) {
-        session.user.id = token.userId as string
-        session.user.role = token.role as string
-        session.user.isActive = token.isActive as boolean
-        session.user.emailVerified = token.emailVerified as boolean
+        (session.user as any).id = token.userId as string
+        (session.user as any).role = token.role as string
+        (session.user as any).isActive = token.isActive as boolean
+        (session.user as any).emailVerified = token.emailVerified as boolean
       }
       return session
     }
   }
-}
+} satisfies NextAuthConfig

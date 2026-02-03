@@ -43,14 +43,18 @@ npm run lint         # Run ESLint on codebase
 - Ejemplo: `/admin/productos/nuevo` en lugar de modal
 
 ### Autenticación
-- **Sistema:** NextAuth.js v5 (beta) con Credentials Provider
+- **Sistema:** NextAuth.js v5 (beta.30) con Credentials Provider
 - **Session Strategy:** JWT (7 días de expiración)
 - **Providers:** Email/Password (OAuth puede agregarse después)
 - **Route Protection:** Middleware en `src/middleware.ts`
 - **API Protection:** `requireAdmin()` y `requireAuth()` desde `src/lib/auth/auth-utils.ts`
 - **Password Security:** Bcrypt con 12 salt rounds
-- **Email Service:** Resend (para verificación y reset de contraseña)
-- **Estado:** Parcialmente implementado (Phases 1-3 completadas)
+- **Email Service:** Resend (integrado y funcional)
+  - Servicio: `src/lib/email/email-service.ts`
+  - Funciones: `sendVerificationEmail()`, `sendPasswordResetEmail()`, `sendWelcomeEmail()`
+- **Estado:** 100% completado (Phases 1-6)
+- **UI Funcional:** Páginas de Login, Registro, Error, Verificación y Reseteo de contraseña.
+- **Navbar Dinámica:** Menú de usuario con logout implementado
 
 ### Data Layer
 - **Base de datos:** PostgreSQL (Railway) + Prisma ORM
@@ -68,8 +72,12 @@ The application uses Next.js App Router with the following key routes:
 - `/producto/[slug]` - Dynamic product detail pages
 - `/carrito` - Shopping cart
 - `/checkout` - Checkout flow
-- `/mi-cuenta` - User account pages
-- `/(auth)` - Authentication route group
+- `/mi-cuenta` - User account pages (protected)
+- `/(auth)` - Authentication route group:
+  - `/auth/login` - Login page
+  - `/auth/registro` - Registration page
+  - `/auth/error` - Authentication error page
+- `/admin` - Admin panel (protected, admin-only)
 
 ### State Management
 
@@ -197,9 +205,11 @@ When modifying cart logic, ensure the unique key pattern (`productId-size-colorN
 - `src/lib/db/users.ts` - User queries (list, detail, status/role updates, **NEVER returns password**)
 - `src/lib/validations/admin.ts` - Zod validation schemas
 - `src/store/admin-store.ts` - Zustand stores for filters
+- `src/auth.ts` - NextAuth v5 initialization (exports auth, signIn, signOut, handlers)
+- `src/lib/auth/auth-config.ts` - NextAuth configuration (providers, callbacks, JWT) using NextAuthConfig
 - `src/lib/auth/auth-utils.ts` - NextAuth helper functions (requireAdmin, requireAuth, getCurrentSession)
-- `src/lib/auth/auth-config.ts` - NextAuth configuration (providers, callbacks, JWT)
 - `src/lib/auth/password-utils.ts` - Password hashing and validation utilities
+- `src/middleware.ts` - Route protection middleware using NextAuth v5 auth()
 
 ### Security Notes
 - **Users API:** NEVER expose password field (excluded in `transformUser` function)
@@ -208,3 +218,90 @@ When modifying cart logic, ensure the unique key pattern (`productId-size-colorN
 - **Password Security:** Bcrypt hashing with 12 salt rounds, strength validation enforced
 - **Session:** JWT strategy with 7-day expiration, includes role and status in token
 - **Validation:** Always validate in both frontend (react-hook-form + Zod) and backend (API routes + Zod)
+
+## NextAuth v5 Implementation Details
+
+### Migration from v4 to v5
+The project uses NextAuth v5 (beta.30), which has breaking changes from v4:
+
+**Key Changes:**
+- `NextAuthOptions` → `NextAuthConfig`
+- `withAuth()` middleware → `auth()` function
+- `getServerSession()` → `auth()` from `src/auth.ts`
+
+**File Structure:**
+```
+src/
+├── auth.ts                          # NextAuth v5 initialization
+│   └── Exports: { auth, signIn, signOut, handlers }
+├── lib/auth/
+│   ├── auth-config.ts              # NextAuthConfig (providers, callbacks, session)
+│   ├── auth-utils.ts               # Helper functions (requireAdmin, requireAuth)
+│   └── password-utils.ts           # Bcrypt utilities
+├── middleware.ts                    # Route protection using auth()
+└── app/api/auth/[...nextauth]/     # API route handlers
+```
+
+**Authentication Flow:**
+1. User submits credentials via `/auth/login`
+2. NextAuth validates via `CredentialsProvider` in `auth-config.ts`
+3. JWT token created with custom fields (userId, role, isActive, emailVerified)
+4. Session exposed to client with custom user fields
+5. Middleware protects routes by checking `req.auth.user.role` and `req.auth.user.isActive`
+
+**Custom Session Fields:**
+The session is extended to include:
+- `user.id` - User ID from database
+- `user.role` - "customer" | "admin"
+- `user.isActive` - Account status
+- `user.emailVerified` - Email verification status (boolean, not Date)
+
+**Type Definitions:**
+Custom types are declared in `src/types/next-auth.d.ts` to extend NextAuth's default types.
+
+**Important Notes:**
+- Use type assertions (`as any`, `as string`) when accessing custom session fields due to NextAuth v5 beta type limitations
+- `emailVerified` is stored as boolean in Prisma (not Date as in default NextAuth)
+- All credentials must be cast to `string` in authorize function
+- Middleware uses `req.auth.user` (not `req.nextauth.token`) to access session data
+
+## Known Issues & Fixes
+
+### Build Errors Fixed (2026-02-03)
+1. **middleware.ts**: Updated from `withAuth` to `auth()` pattern
+2. **layout.tsx**: Fixed corrupted file with `...` literal
+3. **Type errors**: Fixed various TypeScript issues related to NextAuth v5 types
+4. **Zod schemas**: Updated `errorMap` to `message` for Zod 4.x compatibility
+5. **Filter functions**: Changed to accept `Partial<FilterData>` types
+
+### Zod 4.x Breaking Changes
+When using `z.enum()`, use `message` instead of `errorMap`:
+```typescript
+// ❌ Old (Zod 3.x)
+z.enum(["value1", "value2"], {
+  errorMap: () => ({ message: "Invalid value" })
+})
+
+// ✅ New (Zod 4.x)
+z.enum(["value1", "value2"], {
+  message: "Invalid value"
+})
+```
+
+## Current Project Status
+
+**Last Updated:** 2026-02-03
+
+**Completion Status:**
+- ✅ Frontend UI (100%)
+- ✅ Database Layer (100%)
+- ✅ Admin Panel (100%)
+- ✅ Authentication (100%)
+  - ✅ Phase 1-6: Core auth, route protection, UI, email service, integration, and testing.
+- ⏳ Checkout Flow (50% - UI complete, API pending)
+- ❌ Payment Integration (0%)
+
+**Next Steps:**
+1. Implement checkout API (`POST /api/orders`)
+2. Migrate Cart/Wishlist to database for authenticated users
+3. Create first admin user (via seed script or manually)

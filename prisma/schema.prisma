@@ -281,3 +281,15 @@ model VerificationToken {
   @@unique([identifier, token])
   @@index([token])
 }
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  identifier String   // Email del usuario
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@index([token])
+  @@index([identifier])
+}

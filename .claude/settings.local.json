@@ -10,7 +10,11 @@
       "Bash(npm run build:*)",
       "Bash(npx prisma migrate dev:*)",
       "Bash(npx prisma generate:*)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(npm run dev:*)"
     ]
   }
 }

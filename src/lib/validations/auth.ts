@@ -30,7 +30,17 @@ export const passwordResetSchema = z.object({
   path: ["confirmPassword"],
 })
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Token requerido"),
+})
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email("Email inválido"),
+})
+
 export type SignInFormData = z.infer<typeof signInSchema>
 export type SignUpFormData = z.infer<typeof signUpSchema>
 export type PasswordResetRequestData = z.infer<typeof passwordResetRequestSchema>
 export type PasswordResetData = z.infer<typeof passwordResetSchema>
+export type VerifyEmailData = z.infer<typeof verifyEmailSchema>
+export type ResendVerificationData = z.infer<typeof resendVerificationSchema>

@@ -12,9 +12,9 @@ interface StatusBadgeProps {
 }
 
 const orderStatusConfig = {
-  pending: { variant: "secondary" as const, label: "Pendiente" },
-  confirmed: { variant: "default" as const, label: "Confirmado" },
-  shipped: { variant: "outline" as const, label: "Enviado" },
+  pending: { variant: "secondary" as const, label: "Pendiente", className: undefined },
+  confirmed: { variant: "default" as const, label: "Confirmado", className: undefined },
+  shipped: { variant: "outline" as const, label: "Enviado", className: undefined },
   delivered: {
     variant: "default" as const,
     label: "Entregado",
@@ -23,18 +23,18 @@ const orderStatusConfig = {
 }
 
 const paymentStatusConfig = {
-  pending: { variant: "secondary" as const, label: "Pendiente" },
+  pending: { variant: "secondary" as const, label: "Pendiente", className: undefined },
   paid: {
     variant: "default" as const,
     label: "Pagado",
     className: "bg-green-500",
   },
-  failed: { variant: "destructive" as const, label: "Fallido" },
+  failed: { variant: "destructive" as const, label: "Fallido", className: undefined },
 }
 
 const userRoleConfig = {
-  customer: { variant: "secondary" as const, label: "Cliente" },
-  admin: { variant: "default" as const, label: "Admin" },
+  customer: { variant: "secondary" as const, label: "Cliente", className: undefined },
+  admin: { variant: "default" as const, label: "Admin", className: undefined },
 }
 
 export function StatusBadge({ type, value, className }: StatusBadgeProps) {

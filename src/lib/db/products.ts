@@ -259,7 +259,7 @@ export interface CreateProductData {
   isNew?: boolean
   isFeatured?: boolean
   isFlashSale?: boolean
-  images: { url: string; order: number }[]
+  images: { url: string; order?: number }[]
   sizes: string[]
   colors: { name: string; hex: string }[]
   tags?: string[]
@@ -286,7 +286,10 @@ export async function createProduct(data: CreateProductData): Promise<Product> {
       isFeatured: data.isFeatured ?? false,
       isFlashSale: data.isFlashSale ?? false,
       images: {
-        create: data.images,
+        create: data.images.map((img, index) => ({
+          url: img.url,
+          order: img.order ?? index,
+        })),
       },
       sizes: {
         create: data.sizes.map((size) => ({ size })),
@@ -333,7 +336,10 @@ export async function updateProduct(
   if (data.images) {
     await prisma.productImage.deleteMany({ where: { productId: id } })
     updateData.images = {
-      create: data.images,
+      create: data.images.map((img, index) => ({
+        url: img.url,
+        order: img.order ?? index,
+      })),
     }
   }
 

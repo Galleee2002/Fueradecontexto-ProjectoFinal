@@ -9,6 +9,8 @@ import { TopBanner } from "@/components/layout/top-banner";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ScrollToTop } from "@/components/shared/scroll-to-top";
+import { Toaster } from "@/components/ui/sonner";
+import { VerificationBanner } from "@/components/auth/verification-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +49,7 @@ export default function RootLayout({
               <WishlistProvider>
                 <TopBanner />
                 <Navbar />
+                <VerificationBanner />
                 <main className="min-h-screen">{children}</main>
                 <Footer />
                 <ScrollToTop />
@@ -54,6 +57,7 @@ export default function RootLayout({
             </CartProvider>
           </ThemeProvider>
         </SessionProvider>
+        <Toaster richColors />
       </body>
     </html>
   );

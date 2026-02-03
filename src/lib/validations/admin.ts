@@ -20,21 +20,21 @@ export const productSchema = z.object({
   originalPrice: z.number().positive().optional().nullable(),
   discount: z.number().int().min(0).max(100).optional().nullable(),
   category: z.enum(["buzos", "gorras", "camperas", "remeras", "accesorios"], {
-    errorMap: () => ({ message: "Categoría inválida" }),
+    message: "Categoría inválida",
   }),
   stock: z.number().int().min(0, "El stock no puede ser negativo"),
-  rating: z.number().min(0).max(5).default(0),
-  reviewCount: z.number().int().min(0).default(0),
-  soldCount: z.number().int().min(0).default(0),
-  isNew: z.boolean().default(false),
-  isFeatured: z.boolean().default(false),
-  isFlashSale: z.boolean().default(false),
+  rating: z.number().min(0).max(5),
+  reviewCount: z.number().int().min(0),
+  soldCount: z.number().int().min(0),
+  isNew: z.boolean(),
+  isFeatured: z.boolean(),
+  isFlashSale: z.boolean(),
   // Nested arrays
   images: z
     .array(
       z.object({
         url: z.string().url("URL de imagen inválida"),
-        order: z.number().int().min(0).default(0),
+        order: z.number().int().min(0).optional(),
       })
     )
     .min(1, "Al menos una imagen es requerida"),
@@ -42,7 +42,7 @@ export const productSchema = z.object({
     .array(z.enum(["XS", "S", "M", "L", "XL", "XXL", "Unico"]))
     .min(1, "Al menos un tamaño es requerido"),
   colors: z.array(productColorSchema).min(1, "Al menos un color es requerido"),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string()),
 })
 
 export type ProductFormData = z.infer<typeof productSchema>
@@ -59,7 +59,7 @@ export type StockUpdateData = z.infer<typeof stockUpdateSchema>
 
 export const orderStatusSchema = z.object({
   status: z.enum(["pending", "confirmed", "shipped", "delivered"], {
-    errorMap: () => ({ message: "Estado de pedido inválido" }),
+    message: "Estado de pedido inválido",
   }),
 })
 

@@ -15,9 +15,7 @@ export const orderInclude = {
   user: {
     select: { firstName: true, lastName: true, email: true },
   },
-  items: {
-    orderBy: { createdAt: "asc" as const },
-  },
+  items: true,
 } satisfies Prisma.OrderInclude
 
 // Type for Prisma order with includes
@@ -47,8 +45,8 @@ export function transformOrder(prismaOrder: PrismaOrderWithIncludes): Order {
     shippingCost: prismaOrder.shippingCost,
     tax: prismaOrder.tax,
     total: prismaOrder.total,
-    shippingAddress: prismaOrder.shippingAddress as Address,
-    billingAddress: prismaOrder.billingAddress as Address,
+    shippingAddress: prismaOrder.shippingAddress as unknown as Address,
+    billingAddress: prismaOrder.billingAddress as unknown as Address,
     createdAt: prismaOrder.createdAt,
     updatedAt: prismaOrder.updatedAt,
     items: prismaOrder.items?.map((item) => ({
@@ -72,7 +70,7 @@ export function transformOrder(prismaOrder: PrismaOrderWithIncludes): Order {
 /**
  * Builds Prisma where clause from filters
  */
-function buildWhereClause(filters: OrderFiltersData): Prisma.OrderWhereInput {
+function buildWhereClause(filters: Partial<OrderFiltersData>): Prisma.OrderWhereInput {
   const where: Prisma.OrderWhereInput = {}
 
   // Search: orderNumber OR user name OR user email
@@ -95,14 +93,15 @@ function buildWhereClause(filters: OrderFiltersData): Prisma.OrderWhereInput {
   }
 
   // Date range filter
-  if (filters.startDate) {
-    where.createdAt = { gte: new Date(filters.startDate) }
-  }
-  if (filters.endDate) {
+  if (filters.startDate && filters.endDate) {
     where.createdAt = {
-      ...where.createdAt,
+      gte: new Date(filters.startDate),
       lte: new Date(filters.endDate),
     }
+  } else if (filters.startDate) {
+    where.createdAt = { gte: new Date(filters.startDate) }
+  } else if (filters.endDate) {
+    where.createdAt = { lte: new Date(filters.endDate) }
   }
 
   return where
@@ -116,7 +115,7 @@ function buildWhereClause(filters: OrderFiltersData): Prisma.OrderWhereInput {
  * Get orders with optional filters and pagination
  */
 export async function getOrders(
-  filters: OrderFiltersData = {}
+  filters: Partial<OrderFiltersData> = {}
 ): Promise<{ orders: Order[]; total: number }> {
   const where = buildWhereClause(filters)
   const skip = ((filters.page || 1) - 1) * (filters.limit || 20)

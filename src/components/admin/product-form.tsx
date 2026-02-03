@@ -25,7 +25,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
 import { Loader2, Plus, X } from "lucide-react"
-import { Product } from "@/types"
+import { Product, Size } from "@/types"
 
 interface ProductFormProps {
   initialData?: Product
@@ -41,7 +41,7 @@ const categories = [
   { value: "accesorios", label: "Accesorios" },
 ]
 
-const sizes = ["XS", "S", "M", "L", "XL", "XXL", "Unico"]
+const sizes: Size[] = ["XS", "S", "M", "L", "XL", "XXL", "Unico"]
 
 export function ProductForm({
   initialData,
@@ -135,7 +135,7 @@ export function ProductForm({
     )
   }
 
-  const toggleSize = (size: string) => {
+  const toggleSize = (size: Size) => {
     if (selectedSizes.includes(size)) {
       form.setValue(
         "sizes",

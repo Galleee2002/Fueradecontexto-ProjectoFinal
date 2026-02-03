@@ -73,7 +73,7 @@ export function transformUser(prismaUser: any, includeRelations = false): User {
 /**
  * Builds Prisma where clause from filters
  */
-function buildWhereClause(filters: UserFiltersData): Prisma.UserWhereInput {
+function buildWhereClause(filters: Partial<UserFiltersData>): Prisma.UserWhereInput {
   const where: Prisma.UserWhereInput = {}
 
   // Search: firstName OR lastName OR email
@@ -106,7 +106,7 @@ function buildWhereClause(filters: UserFiltersData): Prisma.UserWhereInput {
  * Get users with optional filters and pagination
  */
 export async function getUsers(
-  filters: UserFiltersData = {}
+  filters: Partial<UserFiltersData> = {}
 ): Promise<{ users: User[]; total: number }> {
   const where = buildWhereClause(filters)
   const skip = ((filters.page || 1) - 1) * (filters.limit || 20)

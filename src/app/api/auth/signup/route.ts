@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { hashPassword, validatePasswordStrength } from "@/lib/auth/password-utils"
 import { signUpSchema } from "@/lib/validations/auth"
+import { createVerificationToken } from "@/lib/auth/token-utils"
+import { sendVerificationEmail } from "@/lib/email/email-service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,10 +55,16 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // TODO: Send verification email (Phase 5)
+    // Generate token and send verification email
+    const token = await createVerificationToken(user.email)
+    await sendVerificationEmail(user.email, token)
 
     return NextResponse.json(
-      { message: "Usuario creado exitosamente", user },
+      {
+        message: "Usuario creado exitosamente. Revisa tu email para verificar tu cuenta.",
+        requiresVerification: true,
+        user
+      },
       { status: 201 }
     )
 
