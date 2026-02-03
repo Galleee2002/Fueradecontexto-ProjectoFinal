@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { CheckoutSteps } from "@/components/checkout/checkout-steps"
@@ -29,10 +29,11 @@ export default function CheckoutPage() {
   const router = useRouter()
 
   // Redirect if cart is empty
-  if (items.length === 0 && !isProcessing) {
-    router.push("/carrito")
-    return null
-  }
+  useEffect(() => {
+    if (items.length === 0 && !isProcessing) {
+      router.push("/carrito")
+    }
+  }, [items.length, isProcessing, router])
 
   const handleShippingNext = (data: ShippingAddressData) => {
     // Remove saveAddress as it's not used in API

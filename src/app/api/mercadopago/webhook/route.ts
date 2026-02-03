@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getPayment } from "@/lib/mercadopago/payment"
 import { updateOrderPaymentStatus } from "@/lib/db/orders"
 import { restoreStock } from "@/lib/db/stock"
-import { parseWebhookPayload } from "@/lib/mercadopago/webhooks"
+import {
+  parseWebhookPayload,
+  validateWebhookSignature,
+} from "@/lib/mercadopago/webhooks"
 import { sendOrderConfirmationEmail } from "@/lib/email/order-confirmation"
 
 /**
@@ -40,6 +43,19 @@ export async function POST(request: NextRequest) {
     }
 
     const paymentId = webhook.data.id
+
+    // Validate webhook signature
+    const isValidSignature = validateWebhookSignature(
+      request.headers,
+      paymentId
+    )
+
+    if (!isValidSignature) {
+      console.error("[MP Webhook] Invalid signature - rejecting webhook")
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
+
+    console.log("[MP Webhook] Signature validated successfully")
 
     // Get payment details from Mercado Pago
     let payment
