@@ -35,25 +35,6 @@ export const authConfigEdge = {
       }
       return session
     },
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const isAdmin = auth?.user?.role === "admin" && auth?.user?.isActive === true
-
-      // Admin routes
-      if (nextUrl.pathname.startsWith("/admin")) {
-        return isAdmin
-      }
-
-      // Protected routes
-      if (
-        nextUrl.pathname.startsWith("/mi-cuenta") ||
-        nextUrl.pathname.startsWith("/checkout")
-      ) {
-        return isLoggedIn
-      }
-
-      return true
-    }
   },
   providers: [], // Providers are set in auth.ts
 } satisfies NextAuthConfig
