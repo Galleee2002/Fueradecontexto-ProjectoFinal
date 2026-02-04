@@ -9,12 +9,17 @@ import type { Order } from "@/types"
 export async function createPreference(input: {
   order: Order
   userEmail: string
+  baseUrl?: string
 }): Promise<string> {
   const preference = new Preference(mpClient)
 
   if (!input.order.items || input.order.items.length === 0) {
     throw new Error("Order must have items")
   }
+
+  // Use provided baseUrl or fallback to NEXTAUTH_URL
+  // In production, baseUrl should be passed from the request
+  const baseUrl = input.baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000"
 
   const result = await preference.create({
     body: {
@@ -38,13 +43,13 @@ export async function createPreference(input: {
         mode: "not_specified",
       },
       back_urls: {
-        success: `${process.env.NEXTAUTH_URL}/checkout/success/${input.order.id}`,
-        failure: `${process.env.NEXTAUTH_URL}/checkout/failure`,
-        pending: `${process.env.NEXTAUTH_URL}/checkout/success/${input.order.id}`,
+        success: `${baseUrl}/checkout/success/${input.order.id}`,
+        failure: `${baseUrl}/checkout/failure`,
+        pending: `${baseUrl}/checkout/success/${input.order.id}`,
       },
       auto_return: "approved",
       external_reference: input.order.orderNumber,
-      notification_url: `${process.env.NEXTAUTH_URL}/api/mercadopago/webhook`,
+      notification_url: `${baseUrl}/api/mercadopago/webhook`,
       statement_descriptor: "Fueradecontexto",
       metadata: {
         order_id: input.order.id,

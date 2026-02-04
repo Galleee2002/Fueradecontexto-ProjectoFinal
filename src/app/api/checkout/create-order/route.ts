@@ -151,9 +151,15 @@ export async function POST(request: NextRequest) {
     // 9. Create Mercado Pago preference
     let preferenceId: string
     try {
+      // Get base URL from request headers
+      const host = request.headers.get("host")
+      const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
+      const baseUrl = host ? `${protocol}://${host}` : process.env.NEXTAUTH_URL
+
       preferenceId = await createPreference({
         order,
         userEmail: user.email,
+        baseUrl,
       })
 
       // Update order with preference ID
