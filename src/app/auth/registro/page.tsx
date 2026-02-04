@@ -60,6 +60,7 @@ export default function RegisterPage() {
           lastName: values.lastName,
           email: values.email,
           password: values.password,
+          confirmPassword: values.confirmPassword,
           phone: values.phone,
         }),
       })
