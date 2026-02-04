@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getBaseUrl } from "@/lib/env";
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -41,7 +42,7 @@ export async function sendEmail(options: EmailOptions) {
  * Send verification email
  */
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
+  const verificationUrl = `${getBaseUrl()}/auth/verify?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
@@ -112,7 +113,7 @@ export async function sendVerificationEmail(email: string, token: string) {
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
+  const resetUrl = `${getBaseUrl()}/auth/reset-password?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
@@ -225,7 +226,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
               <li>Recibe ofertas exclusivas</li>
             </ul>
             <div style="text-align: center;">
-              <a href="${process.env.NEXTAUTH_URL}/catalogo" class="button">Explorar Catálogo</a>
+              <a href="${getBaseUrl()}/catalogo" class="button">Explorar Catálogo</a>
             </div>
           </div>
           <div class="footer">
@@ -241,7 +242,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 
     Tu cuenta ha sido verificada exitosamente.
 
-    Explora nuestro catálogo: ${process.env.NEXTAUTH_URL}/catalogo
+    Explora nuestro catálogo: ${getBaseUrl()}/catalogo
   `;
 
   return sendEmail({

@@ -7,7 +7,7 @@ export const banners: Banner[] = [
     subtitle: "Hasta 40% OFF en buzos y camperas",
     ctaText: "Ver Coleccion",
     ctaLink: "/catalogo?category=buzos",
-    image: "https://placehold.co/1920x600/0A0A0A/E91E8C?text=Coleccion+Invierno",
+    image: "https://placehold.co/1920x600/0A0A0A/E91E8C",
     backgroundColor: "#0A0A0A",
   },
   {
@@ -16,7 +16,7 @@ export const banners: Banner[] = [
     subtitle: "Diseno exclusivo, comodidad total",
     ctaText: "Comprar Ahora",
     ctaLink: "/catalogo?category=buzos",
-    image: "https://placehold.co/1920x600/111111/E91E8C?text=Buzos+Oversize",
+    image: "https://placehold.co/1920x600/111111/E91E8C",
     backgroundColor: "#111111",
   },
   {
@@ -25,7 +25,7 @@ export const banners: Banner[] = [
     subtitle: "En compras mayores a $50.000",
     ctaText: "Explorar Tienda",
     ctaLink: "/catalogo",
-    image: "https://placehold.co/1920x600/1a1a2e/E91E8C?text=Envio+Gratis",
+    image: "https://placehold.co/1920x600/1a1a2e/E91E8C",
     backgroundColor: "#1a1a2e",
   },
 ]

@@ -9,6 +9,7 @@ import {
 } from "@/lib/db/stock"
 import { createPreference, getCheckoutUrl } from "@/lib/mercadopago/preference"
 import { prisma } from "@/lib/prisma"
+import { getBaseUrl } from "@/lib/env"
 
 /**
  * POST /api/checkout/create-order
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
       // Get base URL from request headers
       const host = request.headers.get("host")
       const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
-      const baseUrl = host ? `${protocol}://${host}` : process.env.NEXTAUTH_URL
+      const baseUrl = host ? `${protocol}://${host}` : getBaseUrl()
 
       preferenceId = await createPreference({
         order,

@@ -71,12 +71,16 @@ The application uses Next.js App Router with the following key routes:
 - `/catalogo` - Product catalog with filters and sorting
 - `/producto/[slug]` - Dynamic product detail pages
 - `/carrito` - Shopping cart
-- `/checkout` - Checkout flow
+- `/checkout` - Checkout flow (protected, requires auth)
 - `/mi-cuenta` - User account pages (protected)
-- `/(auth)` - Authentication route group:
+- `/auth` - Authentication routes (NOT a route group):
   - `/auth/login` - Login page
   - `/auth/registro` - Registration page
   - `/auth/error` - Authentication error page
+  - `/auth/verify` - Email verification
+  - `/auth/verify-required` - Email verification required
+  - `/auth/forgot-password` - Password recovery
+  - `/auth/reset-password` - Password reset
 - `/admin` - Admin panel (protected, admin-only)
 
 ### State Management
@@ -267,6 +271,55 @@ Custom types are declared in `src/types/next-auth.d.ts` to extend NextAuth's def
 
 ## Known Issues & Fixes
 
+### Production Errors Fixed (2026-02-04)
+**Critical fixes for Vercel deployment:**
+
+1. **Environment Validation (`src/lib/env.ts`)**
+   - Created `getBaseUrl()` utility that validates `NEXTAUTH_URL` exists in production
+   - Throws error during build if `NEXTAUTH_URL` not configured in production
+   - All dynamic URLs now use this validated base URL instead of localhost fallbacks
+
+2. **Localhost Fallback Removal**
+   - `src/lib/mercadopago/preference.ts` - Uses `getBaseUrl()` for callback URLs
+   - `src/app/api/checkout/create-order/route.ts` - Uses dynamic base URL from request headers
+   - `src/lib/email/email-service.ts` - Uses `getBaseUrl()` for all email links
+   - `src/lib/email/order-confirmation.ts` - Uses `getBaseUrl()` for order confirmation links
+   - **Fixed**: ERR_CONNECTION_REFUSED errors when redirecting after payment
+
+3. **Route Structure Fix**
+   - Renamed `src/app/(auth)/` → `src/app/auth/` (removed route group)
+   - Route groups `(name)` don't appear in URL paths, causing 404s
+   - All auth routes now properly accessible at `/auth/login`, `/auth/registro`, etc.
+   - **Fixed**: 404 errors on all authentication routes
+
+4. **Image URL Cleanup**
+   - Removed `?text=...` query parameters from all placehold.co URLs
+   - `src/data/products.ts` - 48 URLs cleaned
+   - `src/data/banners.ts` - 3 URLs cleaned
+   - Next.js Image Optimization requires clean URLs without query strings
+   - **Fixed**: 400 Bad Request errors on product and banner images
+
+5. **Database Connection Pool**
+   - Implemented singleton pattern in `src/lib/prisma.ts`
+   - Limited connection pool to max 10 connections
+   - Prevents connection exhaustion during Vercel builds
+   - **Fixed**: "Too many database connections" build errors
+
+6. **Dynamic Product Pages**
+   - Changed from static generation to dynamic rendering (`force-dynamic`)
+   - Added 60-second revalidation for better performance
+   - Ensures real-time stock updates
+   - Prevents build-time connection pool exhaustion
+
+**Environment Variables Required in Vercel:**
+- `NEXTAUTH_URL` - **CRITICAL**: Must be set to production URL (e.g., `https://your-domain.vercel.app`)
+- `DATABASE_URL` - PostgreSQL connection string
+- `NEXTAUTH_SECRET` - Secret for JWT signing
+- `RESEND_API_KEY` - Email service API key
+- `EMAIL_FROM` - Email sender address
+- `MERCADO_PAGO_ACCESS_TOKEN` - Payment processor token
+- `MERCADO_PAGO_PUBLIC_KEY` - Payment processor public key
+
 ### Build Errors Fixed (2026-02-03)
 1. **middleware.ts**: Updated from `withAuth` to `auth()` pattern
 2. **layout.tsx**: Fixed corrupted file with `...` literal
@@ -381,14 +434,15 @@ Order model includes MP fields:
 
 ## Current Project Status
 
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
 
 **Completion Status:**
 - ✅ Frontend UI (100%)
 - ✅ Database Layer (100%)
 - ✅ Admin Panel (100%)
 - ✅ Authentication (100%)
-  - ✅ Phase 1-6: Core auth, route protection, UI, email service, integration, and testing.
+  - ✅ Phase 1-6: Core auth, route protection, UI, email service, integration, and testing
+  - ✅ All auth routes properly configured at `/auth/*`
 - ✅ Checkout Flow (100%)
   - ✅ Shipping form with react-hook-form + Zod validation
   - ✅ Shipping method selection (Standard/Express)
@@ -400,10 +454,28 @@ Order model includes MP fields:
   - ✅ Webhook handler for payment notifications
   - ✅ Order confirmation emails
   - ✅ Complete order lifecycle
+  - ✅ Dynamic URL handling for production
+- ✅ **Production Deployment (100%)**
+  - ✅ Environment validation system
+  - ✅ All localhost references removed
+  - ✅ Route structure fixed (auth routes working)
+  - ✅ Image optimization fixed
+  - ✅ Database connection pool optimized
+  - ✅ Build process stable
 
-**Next Steps:**
-1. Configure Mercado Pago credentials in production
-2. Set up webhook URL in Mercado Pago dashboard
-3. Test complete checkout flow with sandbox credentials
-4. Migrate Cart/Wishlist to database for authenticated users (optional enhancement)
-5. Create first admin user (via seed script or manually)
+**Deployment Checklist:**
+- [x] Configure `NEXTAUTH_URL` in Vercel (set to production domain)
+- [x] Configure `DATABASE_URL` in Vercel
+- [x] Configure `NEXTAUTH_SECRET` in Vercel
+- [x] Configure email credentials (`RESEND_API_KEY`, `EMAIL_FROM`)
+- [ ] Configure Mercado Pago credentials in production
+- [ ] Set up Mercado Pago webhook URL in dashboard
+- [ ] Test complete checkout flow in production
+- [ ] Create first admin user (via direct database insert or seed script)
+
+**Optional Enhancements:**
+1. Migrate Cart/Wishlist to database for authenticated users
+2. Add product image uploads (currently using placeholder URLs)
+3. Add order tracking functionality
+4. Add customer reviews and ratings system
+5. Add promotional codes/coupons system

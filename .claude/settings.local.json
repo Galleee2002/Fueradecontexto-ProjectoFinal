@@ -16,7 +16,10 @@
       "Bash(ls:*)",
       "Bash(npm run dev:*)",
       "Bash(dir:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(move \"src\\\\app\\\\\\(auth\\)\" \"src\\\\app\\\\auth\")",
+      "Bash(powershell -Command \"Rename-Item -Path ''src\\\\app\\\\\\(auth\\)'' -NewName ''auth''\")",
+      "Bash(test:*)"
     ]
   }
 }

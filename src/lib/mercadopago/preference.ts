@@ -1,6 +1,7 @@
 import { Preference } from "mercadopago"
 import { mpClient } from "./client"
 import type { Order } from "@/types"
+import { getBaseUrl } from "@/lib/env"
 
 /**
  * Creates a Mercado Pago payment preference
@@ -17,9 +18,9 @@ export async function createPreference(input: {
     throw new Error("Order must have items")
   }
 
-  // Use provided baseUrl or fallback to NEXTAUTH_URL
+  // Use provided baseUrl or fallback to validated environment URL
   // In production, baseUrl should be passed from the request
-  const baseUrl = input.baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const baseUrl = input.baseUrl || getBaseUrl()
 
   const result = await preference.create({
     body: {

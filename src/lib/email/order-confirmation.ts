@@ -1,6 +1,7 @@
 import { sendEmail } from "./email-service"
 import { formatPrice } from "@/lib/formatters"
 import type { OrderItem, Address } from "@/types"
+import { getBaseUrl } from "@/lib/env"
 
 /**
  * Order confirmation email data
@@ -103,7 +104,7 @@ export async function sendOrderConfirmationEmail(
 
             <!-- CTA Button -->
             <div style="text-align: center; margin: 40px 0 20px 0;">
-              <a href="${process.env.NEXTAUTH_URL}/mi-cuenta/pedidos"
+              <a href="${getBaseUrl()}/mi-cuenta/pedidos"
                  style="display: inline-block; background: #000; color: #fff; padding: 14px 40px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 15px; letter-spacing: 0.5px;">
                 Ver Estado del Pedido
               </a>
@@ -121,7 +122,7 @@ export async function sendOrderConfirmationEmail(
               © ${new Date().getFullYear()} Fuera de Contexto. Todos los derechos reservados.
             </p>
             <p style="margin: 0; color: #999; font-size: 11px;">
-              <a href="${process.env.NEXTAUTH_URL}" style="color: #999; text-decoration: none;">Visitar tienda</a>
+              <a href="${getBaseUrl()}" style="color: #999; text-decoration: none;">Visitar tienda</a>
             </p>
           </div>
         </div>
@@ -151,11 +152,11 @@ ${data.shippingAddress.street}
 ${data.shippingAddress.city}, ${data.shippingAddress.province}
 CP: ${data.shippingAddress.postalCode}
 
-Ver estado del pedido: ${process.env.NEXTAUTH_URL}/mi-cuenta/pedidos
+Ver estado del pedido: ${getBaseUrl()}/mi-cuenta/pedidos
 
 ---
 Fuera de Contexto
-${process.env.NEXTAUTH_URL}
+${getBaseUrl()}
   `.trim()
 
   await sendEmail({
