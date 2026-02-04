@@ -11,16 +11,14 @@ import { ImageGallery } from "@/components/product/image-gallery"
 import { ProductInfo } from "@/components/product/product-info"
 import { ProductTabs } from "@/components/product/product-tabs"
 import { RelatedProducts } from "@/components/product/related-products"
-import { getProductBySlug, getProducts } from "@/lib/db/products"
+import { getProductBySlug } from "@/lib/db/products"
 
 /**
- * Generate static params for all products
- * Enables static site generation for product pages
+ * Dynamic rendering with caching for better performance
+ * Product pages show real-time stock and are revalidated every 60 seconds
  */
-export async function generateStaticParams() {
-  const { products } = await getProducts({ limit: 1000 })
-  return products.map((p) => ({ slug: p.slug }))
-}
+export const revalidate = 60
+export const dynamic = "force-dynamic"
 
 export default async function ProductoPage({
   params,
