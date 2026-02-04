@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { User } from "@/types"
 import { UserFiltersData } from "@/lib/validations/admin"
 import { transformOrder } from "@/lib/db/orders"
+import { hashPassword } from "@/lib/auth/password-utils"
 import type { Prisma } from "@prisma/client"
 
 // ============================================
@@ -192,4 +193,91 @@ export async function getUserStats(): Promise<{
   ])
 
   return { total, active, inactive, customers, admins }
+}
+
+// ============================================
+// USER CREATION & DELETION
+// ============================================
+
+export interface CreateUserData {
+  email: string
+  password: string // Plain text - will be hashed
+  firstName: string
+  lastName: string
+  phone?: string | null
+  role?: "customer" | "admin"
+  emailVerified?: boolean
+  isActive?: boolean
+}
+
+/**
+ * Create a new user
+ * Validates email uniqueness and hashes password
+ */
+export async function createUser(data: CreateUserData): Promise<User> {
+  // Check if email already exists
+  const existingUser = await prisma.user.findUnique({
+    where: { email: data.email },
+  })
+
+  if (existingUser) {
+    throw new Error("El email ya está registrado")
+  }
+
+  // Hash password
+  const hashedPassword = await hashPassword(data.password)
+
+  // Create user with defaults
+  const prismaUser = await prisma.user.create({
+    data: {
+      email: data.email,
+      password: hashedPassword,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+      role: data.role || "customer",
+      emailVerified: data.emailVerified || false,
+      isActive: data.isActive !== undefined ? data.isActive : true,
+    },
+    include: userInclude,
+  })
+
+  return transformUser(prismaUser, false)
+}
+
+/**
+ * Delete a user
+ * Prevents self-deletion and last admin deletion
+ */
+export async function deleteUser(id: string, currentUserId: string): Promise<void> {
+  // Prevent self-deletion
+  if (id === currentUserId) {
+    throw new Error("No puedes eliminar tu propia cuenta")
+  }
+
+  // Check if user exists
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { role: true },
+  })
+
+  if (!user) {
+    throw new Error("Usuario no encontrado")
+  }
+
+  // If deleting an admin, check if they're the last one
+  if (user.role === "admin") {
+    const adminCount = await prisma.user.count({
+      where: { role: "admin" },
+    })
+
+    if (adminCount <= 1) {
+      throw new Error("No puedes eliminar el último administrador")
+    }
+  }
+
+  // Hard delete (cascade will remove addresses)
+  await prisma.user.delete({
+    where: { id },
+  })
 }

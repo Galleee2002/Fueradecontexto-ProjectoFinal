@@ -91,6 +91,9 @@ async function main() {
   })
 
   console.log('\n🎉 Database seed completed successfully!')
+  console.log('\n📌 NOTA: Para crear un usuario admin, usa:')
+  console.log('   npm run admin:create')
+  console.log('   o crea uno desde el panel de administración en /admin/usuarios/nuevo')
 }
 
 main()

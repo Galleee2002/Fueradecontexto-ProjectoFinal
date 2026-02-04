@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getUserById, updateUserStatus, updateUserRole } from "@/lib/db/users"
+import { getUserById, updateUserStatus, updateUserRole, deleteUser } from "@/lib/db/users"
 import { userStatusSchema } from "@/lib/validations/admin"
 import { requireAdmin } from "@/lib/auth/auth-utils"
+import { auth } from "@/auth"
 import { z } from "zod"
 
 const userRoleSchema = z.object({
@@ -93,6 +94,54 @@ export async function PATCH(
 
     return NextResponse.json(
       { error: "Failed to update user" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/users/[id]
+ * Deletes a user
+ * Prevents self-deletion and last admin deletion
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Check admin authorization
+    await requireAdmin()
+
+    // Get current user ID
+    const session = await auth()
+    const currentUserId = session?.user?.id as string
+
+    if (!currentUserId) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
+    const { id } = await params
+
+    // Delete user (will validate self-deletion and last admin)
+    await deleteUser(id, currentUserId)
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error("Error deleting user:", error)
+
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 401 })
+    }
+
+    if (
+      error.message?.includes("No puedes eliminar") ||
+      error.message?.includes("no encontrado")
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    return NextResponse.json(
+      { error: "Error al eliminar el usuario" },
       { status: 500 }
     )
   }

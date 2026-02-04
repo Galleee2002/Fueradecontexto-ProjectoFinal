@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
 import { Loader2, Plus, X } from "lucide-react"
 import { Product, Size } from "@/types"
+import { ImageUpload } from "./image-upload"
 
 interface ProductFormProps {
   initialData?: Product
@@ -49,7 +50,6 @@ export function ProductForm({
   isSubmitting,
 }: ProductFormProps) {
   const [colorInput, setColorInput] = useState({ name: "", hex: "#000000" })
-  const [imageInput, setImageInput] = useState("")
   const [tagInput, setTagInput] = useState("")
 
   const form = useForm<ProductFormData>({
@@ -89,23 +89,6 @@ export function ProductForm({
   const colors = form.watch("colors")
   const selectedSizes = form.watch("sizes")
   const tags = form.watch("tags")
-
-  const handleAddImage = () => {
-    if (imageInput.trim()) {
-      form.setValue("images", [
-        ...images,
-        { url: imageInput.trim(), order: images.length },
-      ])
-      setImageInput("")
-    }
-  }
-
-  const handleRemoveImage = (index: number) => {
-    form.setValue(
-      "images",
-      images.filter((_, i) => i !== index)
-    )
-  }
 
   const handleAddColor = () => {
     if (colorInput.name.trim() && colorInput.hex) {
@@ -320,42 +303,12 @@ export function ProductForm({
         {/* Images */}
         <div>
           <FormLabel>Imágenes</FormLabel>
-          <div className="flex gap-2 mt-2">
-            <Input
-              placeholder="URL de imagen"
-              value={imageInput}
-              onChange={(e) => setImageInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  handleAddImage()
-                }
-              }}
+          <div className="mt-2">
+            <ImageUpload 
+              value={images.map((img) => img.url)}
+              onChange={(url) => form.setValue("images", [...images, { url, order: images.length }])}
+              onRemove={(url) => form.setValue("images", images.filter((img) => img.url !== url))}
             />
-            <Button type="button" onClick={handleAddImage}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {images.map((img, index) => (
-              <div
-                key={index}
-                className="relative group border rounded p-1 text-xs"
-              >
-                <span className="pr-6 block max-w-[200px] truncate">
-                  {img.url}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-6 w-6"
-                  onClick={() => handleRemoveImage(index)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
           </div>
           {form.formState.errors.images && (
             <p className="text-sm text-destructive mt-2">

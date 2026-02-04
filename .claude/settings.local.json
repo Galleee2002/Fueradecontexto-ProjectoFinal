@@ -19,7 +19,9 @@
       "Bash(curl:*)",
       "Bash(move \"src\\\\app\\\\\\(auth\\)\" \"src\\\\app\\\\auth\")",
       "Bash(powershell -Command \"Rename-Item -Path ''src\\\\app\\\\\\(auth\\)'' -NewName ''auth''\")",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

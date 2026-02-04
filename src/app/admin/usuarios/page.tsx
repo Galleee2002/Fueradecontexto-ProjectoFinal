@@ -2,6 +2,9 @@ import { getUsers } from "@/lib/db/users"
 import { DataTable } from "@/components/admin/data-table"
 import { usersColumns } from "@/components/admin/columns/users-columns"
 import { UserFilters } from "@/components/admin/user-filters"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import Link from "next/link"
 
 export default async function UsersPage({
   searchParams,
@@ -28,11 +31,20 @@ export default async function UsersPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Usuarios</h2>
-        <p className="text-sm text-muted-foreground">
-          Gestiona los usuarios de la tienda ({total} total)
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Usuarios</h2>
+          <p className="text-sm text-muted-foreground">
+            Gestiona los usuarios de la tienda ({total} total)
+          </p>
+        </div>
+
+        <Button asChild>
+          <Link href="/admin/usuarios/nuevo">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Usuario
+          </Link>
+        </Button>
       </div>
 
       <UserFilters />

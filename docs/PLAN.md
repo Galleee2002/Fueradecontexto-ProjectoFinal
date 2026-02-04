@@ -28,8 +28,9 @@
 - **Embla Carousel**
 
 ### Estado & Persistencia
-- **React Context API** (Cart & Wishlist)
-- **localStorage** (persistencia client-side)
+- **React Context API** (Cart & Wishlist) con **sincronización híbrida a base de datos**
+  - Guest users: localStorage únicamente
+  - Authenticated users: Database (primary) + localStorage (fallback)
 - **Zustand** (estado global para admin panel)
 
 ### Backend & Database
@@ -231,6 +232,164 @@ Crear Orden → Reservar Stock → Crear Preferencia MP
 - Instrucciones completas en `.env.example`
 - Arquitectura documentada en `CLAUDE.md`
 - Guía de implementación en `docs/NEXT-STEPS.md`
+
+---
+
+### ✅ Fase 5: Cart & Wishlist Database Migration (COMPLETADO)
+**Prioridad: Media** (100% completado)
+**Fecha de completación:** 2026-02-04
+
+**Resumen:**
+Se implementó un sistema híbrido de almacenamiento para Cart y Wishlist que combina localStorage (guest users) con PostgreSQL (authenticated users), con sincronización automática en login y optimistic updates para mejor UX.
+
+**Tareas completadas:**
+
+**1. Database Schema:**
+- ✅ Actualizado modelo `CartItem` en Prisma:
+  - Agregado `colorName` (String) - Para unique constraint
+  - Agregado `colorHex` (String) - Para display
+  - Unique constraint actualizado: `@@unique([userId, productId, selectedSize, colorName])`
+  - Índices optimizados en `userId` y `productId`
+- ✅ Modelo `Wishlist` ya existía, sin cambios necesarios
+
+**2. Database Layer:**
+- ✅ Creado `src/lib/db/cart.ts`:
+  - `getUserCart()` - Fetch cart con productos incluidos
+  - `addCartItem()` - Add or update item (merge quantities)
+  - `updateCartItemQuantity()` - Update quantity
+  - `removeCartItem()` - Remove item
+  - `clearUserCart()` - Clear entire cart
+  - `syncCartFromLocalStorage()` - Merge strategy on login
+  - Transform functions con manejo de JSON fields
+- ✅ Creado `src/lib/db/wishlist.ts`:
+  - `getUserWishlist()` - Fetch wishlist product IDs
+  - `addWishlistItem()` - Add to wishlist
+  - `removeWishlistItem()` - Remove from wishlist
+  - `clearUserWishlist()` - Clear entire wishlist
+  - `syncWishlistFromLocalStorage()` - Merge strategy on login
+
+**3. Validación:**
+- ✅ Creado `src/lib/validations/cart.ts` con Zod schemas:
+  - `productColorSchema` - Color validation
+  - `sizeSchema` - Size enum
+  - `addCartItemSchema` - Add to cart validation
+  - `updateQuantitySchema` - Quantity updates
+  - `cartItemSchema` - For sync operations
+  - `syncCartSchema` - Sync payload validation
+  - `addWishlistItemSchema` - Wishlist validation
+  - `syncWishlistSchema` - Wishlist sync validation
+
+**4. API Routes - Cart:**
+- ✅ `GET /api/cart` - Fetch cart for authenticated user
+- ✅ `DELETE /api/cart` - Clear cart
+- ✅ `POST /api/cart/items` - Add item to cart
+- ✅ `PATCH /api/cart/items/[key]` - Update quantity (key: `productId-size-colorName`)
+- ✅ `DELETE /api/cart/items/[key]` - Remove item from cart
+- ✅ `POST /api/cart/sync` - Sync localStorage cart on login
+
+**5. API Routes - Wishlist:**
+- ✅ `GET /api/wishlist` - Fetch wishlist
+- ✅ `DELETE /api/wishlist` - Clear wishlist
+- ✅ `POST /api/wishlist/items` - Add to wishlist
+- ✅ `DELETE /api/wishlist/items/[productId]` - Remove from wishlist
+- ✅ `POST /api/wishlist/sync` - Sync localStorage wishlist on login
+
+**6. Context Modifications:**
+- ✅ Modificado `src/context/cart-context.tsx`:
+  - Agregado `useSession()` para authentication detection
+  - Effect para auto-sync on login
+  - `syncToDatabase()` - Merge localStorage con BD
+  - `fetchFromDatabase()` - Cargar desde BD
+  - `syncItemToDatabase()` - Background sync para CRUD ops
+  - Optimistic updates en `addItem`, `updateQuantity`, `removeItem`
+  - Graceful error handling con localStorage fallback
+- ✅ Modificado `src/context/wishlist-context.tsx`:
+  - Misma arquitectura que cart
+  - Background sync para toggle operations
+
+**Arquitectura Implementada:**
+
+**Storage Strategy:**
+```
+┌──────────────┐
+│ Guest User   │ → localStorage only (no DB overhead)
+└──────────────┘
+
+┌──────────────────┐
+│ Authenticated    │ → Database (primary)
+│ User             │   + localStorage (fallback)
+└──────────────────┘
+
+Login Flow:
+  localStorage cart → POST /api/cart/sync → Merge with DB → Clear localStorage
+
+Logout Flow:
+  Database persists → localStorage cleared → On re-login: fetch from DB
+```
+
+**Optimistic Updates Pattern:**
+```
+User clicks "Add to Cart"
+     │
+     ├─→ setItems(prev => [...prev, newItem])  [IMMEDIATE UI UPDATE]
+     │
+     └─→ syncItemToDatabase()                  [BACKGROUND, NO AWAIT]
+         └─→ try { await fetch(...) }
+             catch { console.error() }          [DON'T THROW, USE LOCALSTORAGE]
+```
+
+**Merge Strategy:**
+```
+Cart Items:
+  - Same productId + size + color → Sum quantities (newQty = dbQty + localQty)
+  - Different items → Add to cart
+
+Wishlist Items:
+  - Item exists → Keep (no duplicates)
+  - Item doesn't exist → Add to wishlist
+```
+
+**Estado del Build:**
+- ✅ Build exitoso sin errores TypeScript
+- ✅ Next.js 16 dynamic params handled (`await params`)
+- ✅ Prisma client regenerated con nuevos fields
+- ✅ 66 rutas generadas correctamente
+
+**Decisiones de Diseño:**
+
+1. **Hybrid Storage**: Best of both worlds (performance + persistence)
+   - Guest users: No DB overhead
+   - Authenticated: Persistence across devices + sessions
+
+2. **Optimistic Updates**: Instant UI feedback
+   - No loading spinners para add/update/remove
+   - Better perceived performance
+
+3. **Graceful Degradation**: Si DB sync falla
+   - localStorage continúa funcionando
+   - Errors logged pero no shown al usuario
+   - Next sync retries automatically
+
+4. **Logout Persistence**: Like Amazon/Shopify
+   - Cart persists en database
+   - Re-login restaura cart
+
+5. **Background Sync**: Non-blocking
+   - No await en sync operations
+   - No bloquea UI
+   - Errors no afectan UX
+
+**Tareas pendientes:**
+- ⏳ Testing manual completo (checklist en `docs/CART-WISHLIST-MIGRATION.md`)
+- ⏳ (Opcional) Cart expiration: Limpiar items antiguos (30+ días)
+- ⏳ (Opcional) Stock validation in cart before checkout
+- ⏳ (Opcional) Price change alerts para cart items
+
+**Documentación:**
+- Guía técnica completa: `docs/CART-WISHLIST-MIGRATION.md`
+- Key learnings: `.claude/memory/MEMORY.md`
+- Arquitectura: `CLAUDE.md` (actualizado)
+- Next steps: `docs/NEXT-STEPS.md` (actualizado)
 
 ---
 

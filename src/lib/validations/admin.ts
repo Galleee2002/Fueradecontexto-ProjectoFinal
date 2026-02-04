@@ -95,3 +95,45 @@ export const userFiltersSchema = z.object({
 })
 
 export type UserFiltersData = z.infer<typeof userFiltersSchema>
+
+export const userRoleSchema = z.object({
+  role: z.enum(["customer", "admin"], {
+    message: "Rol inválido",
+  }),
+})
+
+export type UserRoleData = z.infer<typeof userRoleSchema>
+
+export const createUserSchema = z
+  .object({
+    email: z.string().email("Email inválido").min(1, "El email es requerido"),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
+      .regex(/[a-z]/, "Debe contener al menos una minúscula")
+      .regex(/[0-9]/, "Debe contener al menos un número"),
+    confirmPassword: z.string(),
+    firstName: z
+      .string()
+      .min(2, "Mínimo 2 caracteres")
+      .max(50, "Máximo 50 caracteres"),
+    lastName: z
+      .string()
+      .min(2, "Mínimo 2 caracteres")
+      .max(50, "Máximo 50 caracteres"),
+    phone: z
+      .string()
+      .regex(/^[0-9+\-\s()]*$/, "Teléfono inválido")
+      .optional()
+      .nullable(),
+    role: z.enum(["customer", "admin"], { message: "Rol inválido" }),
+    emailVerified: z.boolean(),
+    isActive: z.boolean(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  })
+
+export type CreateUserFormData = z.infer<typeof createUserSchema>

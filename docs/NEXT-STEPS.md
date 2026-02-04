@@ -1,5 +1,109 @@
 ## ✅ Completado Recientemente
 
+### ✅ Migración de Cart & Wishlist a Base de Datos
+
+**Estado: COMPLETADO** ✅
+**Última actualización:** 2026-02-04
+
+Se implementó un sistema híbrido de almacenamiento para Cart y Wishlist que utiliza localStorage para usuarios guest y PostgreSQL para usuarios autenticados, con sincronización automática en login y optimistic updates.
+
+#### **Funcionalidades Implementadas:**
+
+**1. Database Layer:**
+- ✅ `src/lib/db/cart.ts` - CRUD operations completas con merge strategy
+- ✅ `src/lib/db/wishlist.ts` - CRUD operations para wishlist
+- ✅ Transform functions para convertir Prisma types a frontend types
+- ✅ Transacciones atómicas para sync operations
+
+**2. Validación:**
+- ✅ `src/lib/validations/cart.ts` - Schemas Zod completos:
+  - `addCartItemSchema` - Validación de add to cart
+  - `updateQuantitySchema` - Validación de updates
+  - `syncCartSchema` - Validación de sync desde localStorage
+  - `addWishlistItemSchema` - Validación de wishlist
+  - `syncWishlistSchema` - Validación de wishlist sync
+
+**3. API Routes - Cart:**
+- ✅ `GET /api/cart` - Fetch cart para usuario autenticado
+- ✅ `DELETE /api/cart` - Clear cart
+- ✅ `POST /api/cart/items` - Add item to cart
+- ✅ `PATCH /api/cart/items/[key]` - Update quantity (key: `productId-size-colorName`)
+- ✅ `DELETE /api/cart/items/[key]` - Remove item
+- ✅ `POST /api/cart/sync` - Sync localStorage cart on login
+
+**4. API Routes - Wishlist:**
+- ✅ `GET /api/wishlist` - Fetch wishlist
+- ✅ `DELETE /api/wishlist` - Clear wishlist
+- ✅ `POST /api/wishlist/items` - Add to wishlist
+- ✅ `DELETE /api/wishlist/items/[productId]` - Remove from wishlist
+- ✅ `POST /api/wishlist/sync` - Sync localStorage wishlist on login
+
+**5. Context Modifications:**
+- ✅ `src/context/cart-context.tsx` modificado con:
+  - `useSession()` para detectar authentication
+  - Auto-sync on login (merge con BD)
+  - Optimistic updates (UI instantánea)
+  - Background database sync
+  - Graceful error handling con localStorage fallback
+- ✅ `src/context/wishlist-context.tsx` con misma arquitectura
+
+**6. Database Schema:**
+- ✅ Agregado `colorName` y `colorHex` a `CartItem` model
+- ✅ Unique constraint actualizado: `@@unique([userId, productId, selectedSize, colorName])`
+- ✅ Índices optimizados para queries rápidas
+
+#### **Arquitectura Implementada:**
+
+**Storage Strategy:**
+```
+Guest User:      localStorage only (no DB overhead)
+Authenticated:   Database (primary) + localStorage (fallback)
+Login Flow:      Auto-sync with merge strategy
+Logout Flow:     Data persists in DB, localStorage cleared
+```
+
+**Optimistic Updates:**
+```
+User Action → Update UI (immediate)
+           → Save to localStorage (fallback)
+           → Sync to database (background, no await)
+```
+
+**Merge Strategy on Login:**
+```
+Cart:     If duplicate item → Sum quantities
+Wishlist: If duplicate item → Keep unique (no duplicates)
+```
+
+#### **Decisiones de Diseño:**
+
+1. **Hybrid Storage**: Best of both worlds (performance + persistence)
+2. **Optimistic Updates**: Instant UI feedback, mejor UX
+3. **Graceful Degradation**: Si DB falla, localStorage continúa funcionando
+4. **Logout Persistence**: Cart persiste como Amazon/Shopify
+5. **Background Sync**: No bloquea UI, errors no visibles al usuario
+
+#### **Estado del Build:**
+✅ Build exitoso sin errores de TypeScript
+✅ Next.js 16 dynamic params manejados correctamente
+✅ Prisma client regenerado con nuevos tipos
+✅ 66 rutas generadas correctamente
+
+#### **Testing Checklist:**
+- [ ] Guest user: add items → verify localStorage
+- [ ] Login con localStorage → verify merge en DB (Prisma Studio)
+- [ ] Authenticated: add/update/remove → verify en DB
+- [ ] Logout → verify data persists en DB
+- [ ] Re-login → verify data restored
+- [ ] Simulate network error → verify localStorage fallback
+
+#### **Documentación:**
+- 📄 `docs/CART-WISHLIST-MIGRATION.md` - Documentación técnica completa
+- 📄 `.claude/memory/MEMORY.md` - Key learnings y patterns
+- 📄 `CLAUDE.md` - Actualizado con nueva arquitectura
+
+---
+
 ### ✅ Implementación Completa de Checkout con Mercado Pago
 
 **Estado: COMPLETADO** ✅
@@ -147,8 +251,8 @@ Se completó la implementación, integración y testing del sistema de autentica
 **Próximos pasos:**
 - ✅ ~~Implementar el checkout API (`POST /api/orders`)~~ - COMPLETADO
 - ✅ ~~Integrar Mercado Pago Checkout Pro~~ - COMPLETADO
+- ✅ ~~Migrar el carrito y la wishlist a la base de datos para usuarios autenticados~~ - COMPLETADO (2026-02-04)
 - Configurar credenciales de producción en Mercado Pago
-- Migrar el carrito y la wishlist a la base de datos para usuarios autenticados (opcional)
 
 ### ✅ Panel de Administración (Phases 1, 2, 3 y 4)
 
@@ -182,11 +286,17 @@ Se implementó el Admin Dashboard completo con gestión de productos, pedidos y 
 
 ---
 
-### 2. Migrar Carrito y Wishlist a Base de Datos
+### 2. ~~Migrar Carrito y Wishlist a Base de Datos~~ ✅ COMPLETADO
 
-**Prioridad: Media (Opcional)**
+**Estado: COMPLETADO** ✅
+**Fecha de completación:** 2026-02-04
 
-(... contenido omitido por brevedad ...)
+Esta tarea ha sido completada exitosamente. Ver sección "Migración de Cart & Wishlist a Base de Datos" arriba para detalles completos.
+
+**Documentación:**
+- `docs/CART-WISHLIST-MIGRATION.md` - Guía técnica completa
+- `.claude/memory/MEMORY.md` - Key learnings y patterns
+- `CLAUDE.md` - Arquitectura actualizada
 
 ---
 
