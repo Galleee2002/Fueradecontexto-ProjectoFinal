@@ -1,21 +1,25 @@
 import { HeroBanner } from "@/components/home/hero-banner"
-import { CategoryRow } from "@/components/home/category-row"
-import { FlashSaleSection } from "@/components/home/flash-sale-section"
-import { TodaysPicksSection } from "@/components/home/todays-picks-section"
-import { BestSellersSection } from "@/components/home/best-sellers-section"
-import { QuoteBanner } from "@/components/home/quote-banner"
+import { CategoriesSection } from "@/components/home/categories-section"
+import { FeaturedProductsCarousel } from "@/components/home/featured-products-carousel"
+import { InfoBanner } from "@/components/home/info-banner"
 
 export default function HomePage() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <HeroBanner />
-      <div className="max-w-7xl mx-auto px-4 space-y-12 py-8">
-        <CategoryRow />
-        <FlashSaleSection />
-        <TodaysPicksSection />
-        <BestSellersSection />
+
+      <div className="container mx-auto px-4">
+        <div className="space-y-16 py-12">
+          {/* Sección de Categorías */}
+          <CategoriesSection />
+
+          {/* Sección de Productos Destacados */}
+          <FeaturedProductsCarousel />
+        </div>
       </div>
-      <QuoteBanner />
-    </>
+
+      {/* Banner de Información */}
+      <InfoBanner />
+    </div>
   )
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "next-auth/react";
@@ -12,14 +12,16 @@ import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { Toaster } from "@/components/ui/sonner";
 import { VerificationBanner } from "@/components/auth/verification-banner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
+  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${montserrat.variable} antialiased`}
       >
         <SessionProvider>
           <ThemeProvider
@@ -48,8 +50,8 @@ export default function RootLayout({
             <CartProvider>
               <WishlistProvider>
                 <TopBanner />
-                <Navbar />
                 <VerificationBanner />
+                <Navbar />
                 <main className="min-h-screen">{children}</main>
                 <Footer />
                 <ScrollToTop />

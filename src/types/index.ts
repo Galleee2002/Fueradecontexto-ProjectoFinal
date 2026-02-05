@@ -15,7 +15,6 @@ export interface Product {
   soldCount: number
   isNew?: boolean
   isFeatured?: boolean
-  isFlashSale?: boolean
   stock: number
   tags: string[]
 }

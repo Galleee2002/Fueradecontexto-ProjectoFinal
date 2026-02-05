@@ -70,17 +70,12 @@ export const productsColumns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: "isFlashSale",
+    accessorKey: "isFeatured",
     header: "Estado",
     cell: ({ row }) => {
       const product = row.original
       return (
         <div className="flex gap-1 flex-wrap">
-          {product.isFlashSale && (
-            <Badge variant="destructive" className="text-xs">
-              Flash
-            </Badge>
-          )}
           {product.isFeatured && (
             <Badge variant="secondary" className="text-xs">
               Destacado

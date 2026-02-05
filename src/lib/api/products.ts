@@ -35,9 +35,6 @@ export async function fetchProducts(
   if (filters.colors) {
     params.set("colors", filters.colors.join(","))
   }
-  if (filters.isFlashSale !== undefined) {
-    params.set("isFlashSale", filters.isFlashSale.toString())
-  }
   if (filters.isNew !== undefined) {
     params.set("isNew", filters.isNew.toString())
   }

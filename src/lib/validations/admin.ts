@@ -28,7 +28,6 @@ export const productSchema = z.object({
   soldCount: z.number().int().min(0),
   isNew: z.boolean(),
   isFeatured: z.boolean(),
-  isFlashSale: z.boolean(),
   // Nested arrays
   images: z
     .array(

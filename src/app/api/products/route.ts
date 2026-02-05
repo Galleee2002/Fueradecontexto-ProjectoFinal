@@ -13,7 +13,7 @@ import { requireAdmin } from "@/lib/auth/auth-utils"
  * - minPrice, maxPrice: Price range numbers
  * - sizes: Comma-separated sizes
  * - colors: Comma-separated color names
- * - isFlashSale, isNew, isFeatured: Boolean flags
+ * - isNew, isFeatured: Boolean flags
  * - sortBy: Sort option
  * - limit, offset: Pagination parameters
  *
@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
     const colors = colorsParam ? colorsParam.split(",") : undefined
 
     // Parse boolean flags
-    const isFlashSale = searchParams.get("isFlashSale") === "true"
     const isNew = searchParams.get("isNew") === "true"
     const isFeatured = searchParams.get("isFeatured") === "true"
 
@@ -71,7 +70,6 @@ export async function GET(request: NextRequest) {
       ...(priceRange && { priceRange }),
       ...(sizes && { sizes }),
       ...(colors && { colors }),
-      ...(searchParams.has("isFlashSale") && { isFlashSale }),
       ...(searchParams.has("isNew") && { isNew }),
       ...(searchParams.has("isFeatured") && { isFeatured }),
       sortBy,

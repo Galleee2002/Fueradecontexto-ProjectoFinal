@@ -37,7 +37,7 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="flex w-72 flex-col">
         <SheetHeader>
-          <SheetTitle className="text-left text-lg font-bold uppercase">
+          <SheetTitle className="text-left text-lg font-bold font-heading uppercase">
             {SITE_NAME}
           </SheetTitle>
         </SheetHeader>

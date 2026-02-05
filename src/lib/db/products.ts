@@ -11,7 +11,6 @@ export interface ProductFilters {
   priceRange?: [number, number]
   sizes?: Size[]
   colors?: string[]
-  isFlashSale?: boolean
   isNew?: boolean
   isFeatured?: boolean
   sortBy?: SortOption
@@ -74,7 +73,6 @@ export function transformProduct(p: PrismaProductWithIncludes): Product {
     soldCount: p.soldCount,
     isNew: p.isNew,
     isFeatured: p.isFeatured,
-    isFlashSale: p.isFlashSale,
     stock: p.stock,
     tags: p.tags.map((t) => t.tag),
   }
@@ -125,9 +123,6 @@ function buildWhereClause(filters: ProductFilters): Prisma.ProductWhereInput {
   }
 
   // Boolean flags
-  if (filters.isFlashSale !== undefined) {
-    where.isFlashSale = filters.isFlashSale
-  }
   if (filters.isNew !== undefined) {
     where.isNew = filters.isNew
   }
@@ -258,7 +253,6 @@ export interface CreateProductData {
   soldCount?: number
   isNew?: boolean
   isFeatured?: boolean
-  isFlashSale?: boolean
   images: { url: string; order?: number }[]
   sizes: string[]
   colors: { name: string; hex: string }[]
@@ -284,7 +278,6 @@ export async function createProduct(data: CreateProductData): Promise<Product> {
       soldCount: data.soldCount ?? 0,
       isNew: data.isNew ?? false,
       isFeatured: data.isFeatured ?? false,
-      isFlashSale: data.isFlashSale ?? false,
       images: {
         create: data.images.map((img, index) => ({
           url: img.url,
@@ -329,7 +322,6 @@ export async function updateProduct(
     ...(data.soldCount !== undefined && { soldCount: data.soldCount }),
     ...(data.isNew !== undefined && { isNew: data.isNew }),
     ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
-    ...(data.isFlashSale !== undefined && { isFlashSale: data.isFlashSale }),
   }
 
   // Handle images update

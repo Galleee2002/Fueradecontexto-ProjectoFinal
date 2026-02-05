@@ -32,7 +32,6 @@ model Product {
 
   isNew         Boolean  @default(false)
   isFeatured    Boolean  @default(false)
-  isFlashSale   Boolean  @default(false)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -47,7 +46,7 @@ model Product {
 
   @@index([category])
   @@index([slug])
-  @@index([isFlashSale, isFeatured])
+  @@index([isFeatured])
 }
 
 model ProductImage {

@@ -41,7 +41,6 @@ async function main() {
         stock: product.stock,
         isNew: product.isNew || false,
         isFeatured: product.isFeatured || false,
-        isFlashSale: product.isFlashSale || false,
 
         images: {
           create: product.images.map((url, index) => ({

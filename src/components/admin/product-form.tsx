@@ -77,7 +77,6 @@ export function ProductForm({
           soldCount: 0,
           isNew: false,
           isFeatured: false,
-          isFlashSale: false,
           images: [],
           sizes: [],
           colors: [],
@@ -464,22 +463,6 @@ export function ProductForm({
                 <FormLabel className="font-normal">
                   Producto Destacado
                 </FormLabel>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="isFlashSale"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal">Oferta Flash</FormLabel>
               </FormItem>
             )}
           />
