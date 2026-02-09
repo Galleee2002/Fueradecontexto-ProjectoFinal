@@ -33,6 +33,12 @@ model Product {
   isNew         Boolean  @default(false)
   isFeatured    Boolean  @default(false)
 
+  // Dimensiones de envío
+  weight        Float?   // Peso en gramos (ej: 300)
+  length        Float?   // Largo en cm (ej: 30)
+  width         Float?   // Ancho en cm (ej: 25)
+  height        Float?   // Alto en cm (ej: 5)
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -217,6 +223,16 @@ model Order {
   mpMerchantOrder String?     // Merchant order ID
   paidAt          DateTime?   // Fecha de pago confirmado
 
+  // ========== CORREO ARGENTINO FIELDS ==========
+  caTrackingNumber  String?   // Número de seguimiento (ej: "AR1234567890AB")
+  caServiceType     String?   // Tipo: "clasico" | "expreso" | "prioritario"
+  caServiceName     String?   // Display: "Correo Clásico"
+  caLabelUrl        String?   // URL del PDF en Cloudinary
+  caEstimatedDays   Int?      // Días estimados de entrega
+  caShippedAt       DateTime? // Fecha de despacho
+  caDeliveredAt     DateTime? // Fecha de entrega
+  caPackageWeight   Float?    // Peso total del paquete
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -227,6 +243,7 @@ model Order {
   @@index([orderNumber])
   @@index([status])
   @@index([mpPaymentId])
+  @@index([caTrackingNumber])
 }
 
 model OrderItem {

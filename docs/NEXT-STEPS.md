@@ -1,5 +1,88 @@
 ## ✅ Completado Recientemente
 
+### ✅ Correo Argentino - Fase 1: Preparación de Base de Datos
+
+**Estado: COMPLETADO** ✅
+**Última actualización:** 2026-02-09
+
+Se completó la preparación de la base de datos para la integración con Correo Argentino, agregando campos de dimensiones de envío a productos y campos de tracking a órdenes.
+
+#### **Funcionalidades Implementadas:**
+
+**1. Database Schema:**
+- ✅ Modelo `Product` extendido con 4 campos de dimensiones:
+  - `weight` (Float?) - Peso en gramos
+  - `length` (Float?) - Largo en cm
+  - `width` (Float?) - Ancho en cm
+  - `height` (Float?) - Alto en cm
+- ✅ Modelo `Order` extendido con 8 campos de Correo Argentino:
+  - `caTrackingNumber` - Número de seguimiento
+  - `caServiceType` - Tipo de servicio
+  - `caServiceName` - Nombre para display
+  - `caLabelUrl` - URL del PDF en Cloudinary
+  - `caEstimatedDays` - Días estimados
+  - `caShippedAt` - Fecha de despacho
+  - `caDeliveredAt` - Fecha de entrega
+  - `caPackageWeight` - Peso total
+  - Índice en `caTrackingNumber`
+
+**2. TypeScript Types:**
+- ✅ `src/types/index.ts` - Interfaces `Product` y `Order` actualizadas
+- ✅ Todos los campos opcionales (nullable) para backward compatibility
+
+**3. Validación:**
+- ✅ `src/lib/validations/admin.ts` - `productSchema` extendido con:
+  - Validación de peso (positivo, opcional)
+  - Validación de dimensiones (positivas, opcionales)
+
+**4. Admin Panel:**
+- ✅ `src/components/admin/product-form.tsx` - Nueva sección "Dimensiones de Envío":
+  - Grid responsive con 4 campos (Peso, Largo, Ancho, Alto)
+  - Placeholders con ejemplos (300g, 30cm, 25cm, 5cm)
+  - Integrado con react-hook-form + Zod
+  - FormDescription para cada campo
+
+**5. Database Layer:**
+- ✅ `src/lib/db/products.ts` actualizado:
+  - `transformProduct()` incluye dimensiones
+  - `createProduct()` guarda dimensiones
+  - `updateProduct()` soporta actualización
+  - `CreateProductData` interface extendida
+
+**6. Configuration:**
+- ✅ `.env.example` - Sección completa de Correo Argentino:
+  - Credenciales de API
+  - URLs de API (prod y test)
+  - Información de warehouse (7 campos)
+  - Instrucciones de registro
+
+**7. Migration:**
+- ✅ Aplicada con `prisma db push`
+- ✅ Prisma client regenerado
+- ✅ Build exitoso sin errores
+
+#### **Backward Compatibility:**
+- ✅ Todos los campos son opcionales (no rompe productos existentes)
+- ✅ Sin pérdida de datos en migración
+- ✅ Órdenes existentes no afectadas
+
+#### **Estado del Build:**
+✅ Compilación TypeScript exitosa (3.8s)
+✅ 45 rutas generadas correctamente
+✅ Sin warnings
+
+#### **Próximos Pasos:**
+- 📋 Fase 2: Implementar cliente API de Correo Argentino
+- ⚠️ Registrarse en Correo Argentino (3-5 días aprobación)
+- ⚠️ Obtener credenciales de API
+
+#### **Documentación:**
+- 📄 `CLAUDE.md` - Sección "Correo Argentino Shipping Integration" agregada
+- 📄 `docs/PLAN.md` - Fase 6 documentada con estimaciones
+- 📄 `.env.example` - Variables de entorno configuradas
+
+---
+
 ### ✅ Migración de Cart & Wishlist a Base de Datos
 
 **Estado: COMPLETADO** ✅
@@ -267,7 +350,227 @@ Se implementó el Admin Dashboard completo con gestión de productos, pedidos y 
 
 ## 🎯 Próximas Tareas Prioritarias
 
-### 1. Configurar Mercado Pago en Producción
+### 1. Correo Argentino - Fase 2: Cliente API
+
+**Prioridad: Alta**
+
+**Objetivo:** Implementar el cliente API de Correo Argentino para obtener cotizaciones, generar etiquetas, y consultar tracking.
+
+**Pre-requisitos:**
+⚠️ **CRÍTICO:** Antes de empezar esta fase, debes:
+1. Registrarte en Correo Argentino: https://www.correoargentino.com.ar/MiCorreo/public/primeros-pasos
+2. Descargar manual API 2.0 PaqAr (PDF)
+3. Solicitar credenciales de API (aprobación: 3-5 días hábiles)
+4. Agregar credenciales a `.env`:
+   ```env
+   CORREO_ARGENTINO_USERNAME="your-username"
+   CORREO_ARGENTINO_PASSWORD="your-password"
+   ```
+
+**Tareas:**
+1. Crear estructura de carpetas `src/lib/shipping/correo-argentino/`
+2. Implementar `client.ts` - Cliente Axios con autenticación (130 líneas)
+3. Implementar `types.ts` - Interfaces TypeScript completas (150 líneas)
+4. Implementar `services/cotizacion.ts` - Servicio de cotización con fallback (80 líneas)
+5. Implementar `services/etiqueta.ts` - Generación de etiquetas (100 líneas)
+6. Implementar `services/tracking.ts` - Consulta de tracking (70 líneas)
+7. Implementar `utils/transformers.ts` - Transformar responses de CA (60 líneas)
+8. Implementar `utils/errors.ts` - Clase CorreoArgentinoError (30 líneas)
+9. Crear `src/lib/cloudinary/upload.ts` - Utility para subir PDFs base64 (50 líneas)
+
+**Funciones principales a implementar:**
+- `getShippingQuotes({ postalCode, weight, dimensions })` → Opciones con precios
+- `generateShippingLabel({ order, sender, recipient, package })` → Tracking + PDF URL
+- `getTrackingInfo(trackingNumber)` → Eventos + estado actual
+
+**Fallback Strategy:**
+- Si API de CA falla → Retornar cotizaciones hardcoded basadas en zona (CABA vs interior)
+- Logging de errores a consola
+- No bloquear checkout
+
+**Dependencias:**
+- `axios` (instalar si no existe)
+- Cloudinary SDK (ya instalado)
+
+**Testing:**
+- Test de autenticación con CA API (usar test environment)
+- Test de cotización con CP de CABA (1000) y Buenos Aires
+- Verificar fallback cuando API está caída
+- Test de transformación de responses
+
+**Tiempo estimado:** 5 días (1 desarrollador)
+
+**Documentación:**
+- Actualizar `CLAUDE.md` con arquitectura del cliente
+- Crear ejemplos de uso en comentarios
+- Documentar formato de responses de CA
+
+---
+
+### 2. Correo Argentino - Fase 3: Checkout con Cotización Dinámica
+
+**Prioridad: Alta**
+**Requiere:** Fase 2 completada
+
+**Objetivo:** Reemplazar métodos de envío hardcodeados (Standard/Express) con cotizaciones reales de Correo Argentino.
+
+**Tareas:**
+1. Crear endpoint `POST /api/shipping/quote` (80 líneas):
+   - Recibe: postalCode, productIds, quantities
+   - Calcula peso total consultando productos en DB
+   - Llama a `getShippingQuotes()` del cliente CA
+   - Retorna: array de opciones con { serviceType, serviceName, cost, estimatedDays }
+2. Actualizar `src/app/checkout/page.tsx`:
+   - Agregar estado `isLoadingQuotes`
+   - Fetch de cotizaciones después de Step 0 (dirección)
+   - Reemplazar radio buttons hardcoded con componente dinámico
+3. Crear `src/components/checkout/shipping-method-selector.tsx` (100 líneas):
+   - Renderiza opciones dinámicas con íconos (Package, Truck, Zap)
+   - Muestra: serviceName, estimatedDays, cost
+   - Integrado con react-hook-form
+4. Actualizar `src/lib/validations/checkout.ts`:
+   - Actualizar `shippingMethodSchema` para campos CA
+5. Actualizar `src/app/api/checkout/create-order/route.ts`:
+   - Guardar `caServiceType`, `caServiceName`, `caEstimatedDays` en orden
+
+**Flujo propuesto:**
+```
+Step 0: Dirección → [Fetch Quotes] → Step 1: Método (dinámico) → Step 2: Confirmación
+```
+
+**Testing:**
+- Agregar productos al carrito
+- Ingresar dirección con CP de CABA (1000)
+- Verificar que se muestran opciones de CA (Clásico, Expreso)
+- Seleccionar método y crear orden
+- Verificar que campos CA se guardan en DB
+- Probar con CP de interior (no CABA)
+
+**Tiempo estimado:** 5 días
+
+---
+
+### 3. Correo Argentino - Fase 4: Generación de Etiquetas en Admin
+
+**Prioridad: Media**
+**Requiere:** Fase 2 completada
+
+**Objetivo:** Permitir que admins generen etiquetas de envío para órdenes pagadas.
+
+**Tareas:**
+1. Crear `src/components/admin/shipping-label-generator.tsx` (120 líneas):
+   - Botón "Generar Etiqueta" (solo si no tiene etiqueta)
+   - Mostrar tracking number si existe
+   - Botones "Descargar PDF" e "Imprimir"
+2. Crear `POST /api/admin/orders/[id]/generate-label` (100 líneas):
+   - Validar que `paymentStatus === "paid"`
+   - Calcular peso total sumando items del pedido
+   - Llamar a `generateShippingLabel()` con datos de orden
+   - Subir PDF a Cloudinary usando `src/lib/cloudinary/upload.ts`
+   - Actualizar orden con `caTrackingNumber` y `caLabelUrl`
+   - Cambiar status a "confirmed" si estaba "pending"
+3. Modificar `src/app/admin/pedidos/[id]/page.tsx`:
+   - Agregar componente después de OrderStatusUpdater
+
+**Variables de entorno requeridas (warehouse):**
+```env
+CORREO_ARGENTINO_WAREHOUSE_NAME="Fuera de Contexto"
+CORREO_ARGENTINO_WAREHOUSE_STREET="Av. Corrientes 1234"
+CORREO_ARGENTINO_WAREHOUSE_CITY="Buenos Aires"
+CORREO_ARGENTINO_WAREHOUSE_PROVINCE="CABA"
+CORREO_ARGENTINO_WAREHOUSE_CP="1000"
+CORREO_ARGENTINO_WAREHOUSE_PHONE="11-1234-5678"
+```
+
+**Testing:**
+- Crear orden de prueba con pago confirmado
+- Ir a admin → pedidos → detalle
+- Click "Generar Etiqueta"
+- Verificar tracking number guardado en DB
+- Descargar PDF y verificar código de barras
+- Verificar que botón cambia a "Descargar PDF"
+
+**Tiempo estimado:** 5 días
+
+---
+
+### 4. Correo Argentino - Fase 5: Sistema de Tracking
+
+**Prioridad: Media**
+**Requiere:** Fase 2 completada
+
+**Objetivo:** Permitir que clientes y admins hagan seguimiento de envíos.
+
+**Para Clientes:**
+1. Crear `src/app/mi-cuenta/pedidos/[id]/tracking/page.tsx` (80 líneas)
+2. Crear `src/components/tracking/tracking-timeline.tsx` (90 líneas):
+   - Timeline vertical con iconos (Package, Truck, MapPin, Check)
+   - Cada evento: fecha, ubicación, descripción
+   - Último evento destacado en color primario
+
+**Para Admin:**
+1. Crear `src/components/admin/order-tracking-widget.tsx` (100 líneas):
+   - Fetch tracking automático
+   - Botón refresh manual
+   - Mostrar estado actual + último evento
+   - Card compacto
+2. Crear `GET /api/admin/orders/[id]/tracking` (60 líneas):
+   - Obtener tracking number de orden
+   - Llamar a `getTrackingInfo(trackingNumber)`
+   - Retornar eventos + estado
+3. Modificar `src/app/admin/pedidos/[id]/page.tsx`:
+   - Agregar widget después de ShippingLabelGenerator
+
+**Testing:**
+- Con orden que tiene tracking number:
+  - Cliente: ir a "Mi Cuenta" → Pedidos → Ver tracking
+  - Verificar timeline correcto
+  - Admin: ver widget en detalle de orden
+  - Click refresh y verificar actualización
+- Con orden sin tracking:
+  - Verificar que muestra "No despachado"
+
+**Tiempo estimado:** 5 días
+
+---
+
+### 5. Correo Argentino - Fase 6: Testing y Deployment
+
+**Prioridad: Media**
+**Requiere:** Fases 2-5 completadas
+
+**Objetivo:** Sistema listo para producción.
+
+**Tareas:**
+1. Testing end-to-end:
+   - Cliente completa pedido
+   - Admin genera etiqueta
+   - Cliente ve tracking
+2. Edge cases:
+   - API de CA caída → verificar fallback funciona
+   - Dirección inválida → error claro
+   - Timeout en cotización → retry funciona
+3. Performance:
+   - Múltiples pedidos simultáneos
+   - Cotización con carrito grande (10+ items)
+4. Configuración de producción:
+   - Agregar credenciales CA a Vercel
+   - Configurar Sentry para logging de errores
+   - Actualizar `CLAUDE.md` con guía completa
+   - Actualizar `docs/PLAN.md`
+5. Deploy a Vercel
+
+**Testing de producción:**
+- Hacer pedido real
+- Generar etiqueta real
+- Verificar tracking funciona
+- Verificar emails incluyen link de tracking
+
+**Tiempo estimado:** 5 días
+
+---
+
+### 6. Configurar Mercado Pago en Producción
 
 **Prioridad: Alta**
 
@@ -316,9 +619,9 @@ Esta tarea ha sido completada exitosamente. Ver sección "Migración de Cart & W
 
 ## 📊 Estado del Proyecto
 
-**Última actualización:** 2026-02-03
+**Última actualización:** 2026-02-09
 
-**Fase actual:** Fase 5 - Optimizaciones y Mejoras
+**Fase actual:** Fase 6 - Correo Argentino Integration (17% completado)
 
 **Progreso general:**
 - ✅ Fase 1: Frontend UI - 100% completado
@@ -338,8 +641,32 @@ Esta tarea ha sido completada exitosamente. Ver sección "Migración de Cart & W
   - ✅ Webhook handler para notificaciones de pago
   - ✅ Emails de confirmación de orden
   - ✅ Páginas de éxito y error
+- ✅ **Fase 5: Cart & Wishlist Database Migration - 100% completado**
+  - ✅ Hybrid storage (localStorage + PostgreSQL)
+  - ✅ Auto-sync on login
+  - ✅ Optimistic updates
+- 🚧 **Fase 6: Correo Argentino Shipping Integration - 17% completado (Fase 1/6)**
+  - ✅ Fase 1: Database Preparation (100%)
+    - ✅ Product dimensions fields (weight, length, width, height)
+    - ✅ Order tracking fields (8 CA fields + index)
+    - ✅ Admin product form with dimension inputs
+    - ✅ TypeScript interfaces and validations
+    - ✅ Database migration applied successfully
+  - 📋 Fase 2: API Client Implementation (0%)
+  - 📋 Fase 3: Dynamic Checkout Integration (0%)
+  - 📋 Fase 4: Label Generation in Admin (0%)
+  - 📋 Fase 5: Tracking System (0%)
+  - 📋 Fase 6: Testing and Deployment (0%)
 
 **Archivos clave creados/modificados:**
+
+**Correo Argentino (Fase 1):**
+- 📄 `prisma/schema.prisma` - 12 campos agregados (4 a Product, 8 a Order)
+- 📄 `src/types/index.ts` - Interfaces Product y Order extendidas
+- 📄 `src/lib/validations/admin.ts` - productSchema con dimensiones
+- 📄 `src/components/admin/product-form.tsx` - Sección "Dimensiones de Envío"
+- 📄 `src/lib/db/products.ts` - CRUD actualizado con dimensiones
+- 📄 `.env.example` - Sección de Correo Argentino agregada
 
 **Autenticación:**
 - 📁 `src/app/(auth)/` - Rutas de UI de autenticación (login, registro, error, verify, forgot-password, reset-password)

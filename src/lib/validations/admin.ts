@@ -28,6 +28,11 @@ export const productSchema = z.object({
   soldCount: z.number().int().min(0),
   isNew: z.boolean(),
   isFeatured: z.boolean(),
+  // Dimensiones de envío (opcionales)
+  weight: z.number().positive("El peso debe ser mayor a 0").optional().nullable(),
+  length: z.number().positive("El largo debe ser mayor a 0").optional().nullable(),
+  width: z.number().positive("El ancho debe ser mayor a 0").optional().nullable(),
+  height: z.number().positive("El alto debe ser mayor a 0").optional().nullable(),
   // Nested arrays
   images: z
     .array(

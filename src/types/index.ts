@@ -17,6 +17,11 @@ export interface Product {
   isFeatured?: boolean
   stock: number
   tags: string[]
+  // Dimensiones de envío
+  weight?: number | null    // Peso en gramos
+  length?: number | null    // Largo en cm
+  width?: number | null     // Ancho en cm
+  height?: number | null    // Alto en cm
 }
 
 export type CategorySlug =
@@ -120,6 +125,15 @@ export interface Order {
   createdAt: Date
   updatedAt: Date
   items?: OrderItem[]       // Optional, loaded in detail view
+  // Correo Argentino fields
+  caTrackingNumber?: string | null
+  caServiceType?: string | null
+  caServiceName?: string | null
+  caLabelUrl?: string | null
+  caEstimatedDays?: number | null
+  caShippedAt?: Date | null
+  caDeliveredAt?: Date | null
+  caPackageWeight?: number | null
 }
 
 export interface OrderItem {

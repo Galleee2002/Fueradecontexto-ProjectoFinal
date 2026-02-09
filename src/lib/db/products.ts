@@ -75,6 +75,10 @@ export function transformProduct(p: PrismaProductWithIncludes): Product {
     isFeatured: p.isFeatured,
     stock: p.stock,
     tags: p.tags.map((t) => t.tag),
+    weight: p.weight ?? undefined,
+    length: p.length ?? undefined,
+    width: p.width ?? undefined,
+    height: p.height ?? undefined,
   }
 }
 
@@ -253,6 +257,10 @@ export interface CreateProductData {
   soldCount?: number
   isNew?: boolean
   isFeatured?: boolean
+  weight?: number | null
+  length?: number | null
+  width?: number | null
+  height?: number | null
   images: { url: string; order?: number }[]
   sizes: string[]
   colors: { name: string; hex: string }[]
@@ -278,6 +286,10 @@ export async function createProduct(data: CreateProductData): Promise<Product> {
       soldCount: data.soldCount ?? 0,
       isNew: data.isNew ?? false,
       isFeatured: data.isFeatured ?? false,
+      weight: data.weight,
+      length: data.length,
+      width: data.width,
+      height: data.height,
       images: {
         create: data.images.map((img, index) => ({
           url: img.url,
@@ -322,6 +334,10 @@ export async function updateProduct(
     ...(data.soldCount !== undefined && { soldCount: data.soldCount }),
     ...(data.isNew !== undefined && { isNew: data.isNew }),
     ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
+    ...(data.weight !== undefined && { weight: data.weight }),
+    ...(data.length !== undefined && { length: data.length }),
+    ...(data.width !== undefined && { width: data.width }),
+    ...(data.height !== undefined && { height: data.height }),
   }
 
   // Handle images update

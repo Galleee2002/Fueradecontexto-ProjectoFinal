@@ -77,6 +77,10 @@ export function ProductForm({
           soldCount: 0,
           isNew: false,
           isFeatured: false,
+          weight: null,
+          length: null,
+          width: null,
+          height: null,
           images: [],
           sizes: [],
           colors: [],
@@ -297,6 +301,118 @@ export function ProductForm({
               </FormItem>
             )}
           />
+        </div>
+
+        {/* Dimensiones de Envío */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">Dimensiones de Envío</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Requerido para cotizar envíos con Correo Argentino
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4">
+            <FormField
+              control={form.control}
+              name="weight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Peso (g)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="300"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>Gramos</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="length"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Largo (cm)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="30"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>Centímetros</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="width"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ancho (cm)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="25"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>Centímetros</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="height"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Alto (cm)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="5"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormDescription>Centímetros</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         {/* Images */}
