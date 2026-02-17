@@ -11,8 +11,8 @@ export function TopBanner() {
   if (!visible) return null
 
   return (
-    <div className="bg-primary text-primary-foreground text-center text-sm py-2 px-4 relative">
-      <p>
+    <div className="bg-primary text-primary-foreground text-center text-xs sm:text-sm py-2 px-4 pr-10 relative">
+      <p className="truncate sm:whitespace-normal">
         ENVIO GRATIS en compras mayores a{" "}
         {formatPrice(FREE_SHIPPING_THRESHOLD)} | Hasta 6 cuotas sin interes
       </p>

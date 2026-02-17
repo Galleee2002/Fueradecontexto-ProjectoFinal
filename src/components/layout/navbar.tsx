@@ -90,7 +90,7 @@ function UserNav() {
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-3 sm:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-4">
           <MobileNav />

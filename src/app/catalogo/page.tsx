@@ -124,7 +124,7 @@ export default function CatalogoPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="flex gap-8">
+      <div className="flex gap-4 lg:gap-8">
         {/* Desktop sidebar */}
         <aside className="hidden lg:block w-64 shrink-0">
           <FilterSidebar

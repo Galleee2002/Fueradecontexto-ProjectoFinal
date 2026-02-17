@@ -17,8 +17,8 @@ export default async function AdminLayout({
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Panel de Administración</h1>
-        <div className="text-sm text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl font-bold">Panel de Administración</h1>
+        <div className="hidden sm:block text-sm text-muted-foreground truncate max-w-[200px]">
           {session.user.email}
         </div>
       </div>

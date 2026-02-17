@@ -17,7 +17,7 @@ export function AccountSidebar() {
   const pathname = usePathname()
 
   return (
-    <nav className="space-y-1">
+    <nav className="flex flex-row overflow-x-auto gap-1 pb-1 md:flex-col md:overflow-visible md:space-y-1 md:pb-0">
       {links.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
