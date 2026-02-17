@@ -394,6 +394,16 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 /**
+ * Delete multiple products by IDs
+ */
+export async function deleteManyProducts(ids: string[]): Promise<number> {
+  const result = await prisma.product.deleteMany({
+    where: { id: { in: ids } },
+  })
+  return result.count
+}
+
+/**
  * Get product by ID (for admin)
  */
 export async function getProductById(id: string): Promise<Product | null> {

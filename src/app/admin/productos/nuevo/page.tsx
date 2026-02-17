@@ -4,6 +4,7 @@ import { ProductForm } from "@/components/admin/product-form"
 import { ProductFormData } from "@/lib/validations/admin"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function NewProductPage() {
@@ -26,12 +27,12 @@ export default function NewProductPage() {
         throw new Error(error.error || "Failed to create product")
       }
 
-      // Success - redirect to products list
+      toast.success("Producto creado correctamente")
       router.push("/admin/productos")
       router.refresh()
     } catch (error: any) {
       console.error("Error creating product:", error)
-      alert(error.message || "Error al crear el producto")
+      toast.error(error.message || "Error al crear el producto")
     } finally {
       setIsSubmitting(false)
     }

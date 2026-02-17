@@ -4,6 +4,7 @@ import { ProductForm } from "@/components/admin/product-form"
 import { ProductFormData } from "@/lib/validations/admin"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Product } from "@/types"
 
@@ -29,7 +30,7 @@ export default function EditProductPage() {
         setProduct(data)
       } catch (error) {
         console.error("Error fetching product:", error)
-        alert("Error al cargar el producto")
+        toast.error("Error al cargar el producto")
         router.push("/admin/productos")
       } finally {
         setLoading(false)
@@ -55,12 +56,12 @@ export default function EditProductPage() {
         throw new Error(error.error || "Failed to update product")
       }
 
-      // Success - redirect to products list
+      toast.success("Producto actualizado correctamente")
       router.push("/admin/productos")
       router.refresh()
     } catch (error: any) {
       console.error("Error updating product:", error)
-      alert(error.message || "Error al actualizar el producto")
+      toast.error(error.message || "Error al actualizar el producto")
     } finally {
       setIsSubmitting(false)
     }

@@ -8,6 +8,8 @@ import { Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { ConfirmationDialog } from "@/components/admin/confirmation-dialog"
 
 export const productsColumns: ColumnDef<Product>[] = [
@@ -103,28 +105,26 @@ export const productsColumns: ColumnDef<Product>[] = [
 ]
 
 function ProductActions({ product }: { product: Product }) {
+  const router = useRouter()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      const response = await fetch(
-        `/api/products/${product.id}?byId=true`,
-        {
-          method: "DELETE",
-        }
-      )
+      const response = await fetch(`/api/products/${product.id}?byId=true`, {
+        method: "DELETE",
+      })
 
       if (!response.ok) {
         throw new Error("Failed to delete product")
       }
 
-      // Reload the page to refresh the product list
-      window.location.reload()
+      toast.success(`"${product.name}" eliminado correctamente`)
+      router.refresh()
     } catch (error) {
       console.error("Error deleting product:", error)
-      alert("Error al eliminar el producto")
+      toast.error("Error al eliminar el producto. Intentá de nuevo.")
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)

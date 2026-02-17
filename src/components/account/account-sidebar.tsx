@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { User, Package, MapPin, Heart, LogOut } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -32,9 +33,12 @@ export function AccountSidebar() {
           {label}
         </Link>
       ))}
-      <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors w-full">
+      <button
+        onClick={() => signOut({ callbackUrl: "/auth/login" })}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors w-full"
+      >
         <LogOut className="h-4 w-4" />
-        Cerrar Sesion
+        Cerrar Sesión
       </button>
     </nav>
   )

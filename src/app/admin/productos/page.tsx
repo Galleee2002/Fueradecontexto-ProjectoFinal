@@ -2,8 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { getProducts } from "@/lib/db/products"
-import { DataTable } from "@/components/admin/data-table"
-import { productsColumns } from "@/components/admin/columns/products-columns"
+import { ProductsDataTable } from "@/components/admin/products-data-table"
 
 export default async function ProductsPage() {
   const { products } = await getProducts({ limit: 100 })
@@ -25,14 +24,14 @@ export default async function ProductsPage() {
         </Button>
       </div>
 
-      <DataTable columns={productsColumns} data={products} />
-
-      {products.length === 0 && (
+      {products.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
             No hay productos en el catálogo
           </p>
         </div>
+      ) : (
+        <ProductsDataTable data={products} />
       )}
     </div>
   )

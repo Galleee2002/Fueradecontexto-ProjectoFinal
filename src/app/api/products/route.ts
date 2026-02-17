@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getProducts, createProduct } from "@/lib/db/products"
+import { getProducts, createProduct, deleteManyProducts } from "@/lib/db/products"
 import type { ProductFilters } from "@/lib/db/products"
 import type { CategorySlug, Size, SortOption } from "@/types"
 import { productSchema } from "@/lib/validations/admin"
@@ -133,6 +133,42 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to create product" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE /api/products
+ * Bulk delete products by IDs (Admin only)
+ * Body: { ids: string[] }
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    await requireAdmin()
+
+    const body = await request.json()
+    const { ids } = body
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: "ids must be a non-empty array" },
+        { status: 400 }
+      )
+    }
+
+    const count = await deleteManyProducts(ids)
+
+    return NextResponse.json({ success: true, deleted: count })
+  } catch (error: any) {
+    console.error("Error bulk deleting products:", error)
+
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 401 })
+    }
+
+    return NextResponse.json(
+      { error: "Failed to delete products" },
       { status: 500 }
     )
   }
