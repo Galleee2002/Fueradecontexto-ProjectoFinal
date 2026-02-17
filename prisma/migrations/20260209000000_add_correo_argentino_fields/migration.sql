@@ -1,18 +1,18 @@
 -- AlterTable: Add shipping dimensions to Product
-ALTER TABLE "Product" ADD COLUMN     "height" DOUBLE PRECISION,
-ADD COLUMN     "length" DOUBLE PRECISION,
-ADD COLUMN     "weight" DOUBLE PRECISION,
-ADD COLUMN     "width" DOUBLE PRECISION;
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "height" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "length" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "weight" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "width" DOUBLE PRECISION;
 
 -- AlterTable: Add Correo Argentino fields to Order
-ALTER TABLE "Order" ADD COLUMN     "caDeliveredAt" TIMESTAMP(3),
-ADD COLUMN     "caEstimatedDays" INTEGER,
-ADD COLUMN     "caLabelUrl" TEXT,
-ADD COLUMN     "caPackageWeight" DOUBLE PRECISION,
-ADD COLUMN     "caServiceName" TEXT,
-ADD COLUMN     "caServiceType" TEXT,
-ADD COLUMN     "caShippedAt" TIMESTAMP(3),
-ADD COLUMN     "caTrackingNumber" TEXT;
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "caDeliveredAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "caEstimatedDays" INTEGER,
+ADD COLUMN IF NOT EXISTS "caLabelUrl" TEXT,
+ADD COLUMN IF NOT EXISTS "caPackageWeight" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "caServiceName" TEXT,
+ADD COLUMN IF NOT EXISTS "caServiceType" TEXT,
+ADD COLUMN IF NOT EXISTS "caShippedAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "caTrackingNumber" TEXT;
 
--- CreateIndex
-CREATE INDEX "Order_caTrackingNumber_idx" ON "Order"("caTrackingNumber");
+-- CreateIndex (only if not exists)
+CREATE INDEX IF NOT EXISTS "Order_caTrackingNumber_idx" ON "Order"("caTrackingNumber");
