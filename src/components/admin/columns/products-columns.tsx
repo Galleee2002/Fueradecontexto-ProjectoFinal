@@ -10,7 +10,7 @@ import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ConfirmationDialog } from "@/components/admin/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog"
 
 export const productsColumns: ColumnDef<Product>[] = [
   {

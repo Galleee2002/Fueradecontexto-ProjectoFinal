@@ -37,6 +37,7 @@ export interface Category {
   icon: string
   description: string
   productCount: number
+  image?: string
 }
 
 export type Size = "XS" | "S" | "M" | "L" | "XL" | "XXL" | "Unico"

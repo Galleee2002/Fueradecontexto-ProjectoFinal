@@ -18,9 +18,10 @@ export function CategoriesSection() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6">
         {categories.map((category, index) => {
-          // Color palette for categories
+          // Color palette for categories (fallback when no image)
           const colors = ["E91E8C", "8E44AD", "3498DB", "E74C3C", "F39C12"]
           const color = colors[index % colors.length]
+          const imageSrc = category.image || `https://placehold.co/400x300/${color}/FFFFFF?text=${encodeURIComponent(category.name)}`
 
           return (
             <Link
@@ -30,7 +31,7 @@ export function CategoriesSection() {
             >
               <div className="aspect-[4/3] relative">
                 <Image
-                  src={`https://placehold.co/400x300/${color}/FFFFFF?text=${encodeURIComponent(category.name)}`}
+                  src={imageSrc}
                   alt={category.name}
                   fill
                   className="object-cover transition-transform group-hover:scale-110"

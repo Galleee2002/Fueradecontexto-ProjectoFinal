@@ -8,7 +8,7 @@ import { Product } from "@/types"
 import { DataTable } from "@/components/admin/data-table"
 import { productsColumns } from "@/components/admin/columns/products-columns"
 import { Button } from "@/components/ui/button"
-import { ConfirmationDialog } from "@/components/admin/confirmation-dialog"
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog"
 
 interface ProductsDataTableProps {
   data: Product[]
