@@ -5,6 +5,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: { path: "prisma/migrations" },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DATABASE_URL"),        // Pooled (PgBouncer) — used at runtime
+    directUrl: env("DIRECT_URL"),    // Direct — used by Prisma migrations
   },
 })
